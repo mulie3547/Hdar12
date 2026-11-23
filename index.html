@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ዕቁቤ / Eqube</title>
+<style>
+:root{--bg:#f6f7f9;--c:#fff;--t:#16181d;--m:#5d6472;--l:#dfe3ea;--a:#0f766e;--at:#fff;--ok:#0f766e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101316;--c:#181c21;--t:#eef0f3;--m:#9aa3b0;--l:#2a3038;--a:#2dd4bf;--at:#06231f;--ok:#2dd4bf}}
+:root[data-theme="dark"]{--bg:#101316;--c:#181c21;--t:#eef0f3;--m:#9aa3b0;--l:#2a3038;--a:#2dd4bf;--at:#06231f;--ok:#2dd4bf}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Ethiopic",sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px 14px 48px}
+h1{font-size:1.5rem;margin:6px 0 2px}h2{font-size:1.05rem;margin:0 0 8px}
+.card{background:var(--c);border:1px solid var(--l);border-radius:14px;padding:14px;margin-bottom:14px}
+textarea,input,select{width:100%;background:var(--bg);color:var(--t);border:1px solid var(--l);border-radius:10px;padding:9px;font:inherit}
+textarea{min-height:130px;resize:vertical}
+label{display:block;font-size:.85rem;color:var(--m);margin:8px 0 3px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>div{flex:1;min-width:95px}
+button{background:var(--a);color:var(--at);border:0;border-radius:10px;padding:11px 14px;font:inherit;font-weight:600;cursor:pointer}
+button.sec{background:transparent;color:var(--t);border:1px solid var(--l)}button:disabled{opacity:.5}
+.h{font-size:.85rem;color:var(--m);margin:6px 0}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mono{font:.75rem ui-monospace,Menlo,monospace;word-break:break-all;white-space:pre-wrap;background:var(--bg);border:1px solid var(--l);border-radius:8px;padding:8px;margin:6px 0}
+.r{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--l)}
+.cl{max-height:260px;overflow:auto}
+.win{font-size:1.4rem;font-weight:700;color:var(--ok);text-align:center;padding:10px;word-break:break-word}
+.wbox{text-align:center;margin:8px 0}#wheel{width:100%;max-width:320px;height:auto;cursor:zoom-in}
+.wbox.z{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.93);display:flex;align-items:center;justify-content:center;margin:0}
+.z #wheel{max-width:min(94vw,94vh);cursor:zoom-out}
+.z .zb{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px}
+.pub{border:2px solid #f59e0b;background:rgba(245,158,11,.12);font-weight:700}
+.publ{color:#b45309;font-weight:700;border-left:4px solid #f59e0b;padding-left:8px}
+.pubt{background:rgba(245,158,11,.28);color:#b45309;font-weight:700;border-radius:4px;padding:0 3px}
+@media (prefers-color-scheme:dark){.publ,.pubt{color:#fcd34d}}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>🎲 ዕቁቤ / Eqube</h1>
+<div class="h">ፍትሃዊ ዕጣ ከማረጋገጫ ጋር / Provably fair draw</div>
+
+<section class="card">
+<h2>1. ምዝገባ / Registration</h2>
+<div id="regnew">
+<label>ስሞችን አስገባ (በአንድ መስመር አንድ ስም) / Names, one per line</label>
+<textarea id="names"></textarea>
+<div class="h">ከተመዘገበ በኋላ ማንም መቀየር አይችልም / Nobody can edit after registering</div>
+<label>3 ዳኞች (ስምና የግል ኮድ) / 3 judges (name and private code)</label>
+<div class="h">እያንዳንዱ ዳኛ የራሱን ኮድ ራሱ ይጻፍ። ዳግም ለማስጀመር ሦስቱም ኮዶች ያስፈልጋሉ / Each judge types their own code. All 3 codes are needed to reset.</div>
+<div class="row"><div><input type="text" id="jn0" placeholder="ዳኛ 1 ስም / Judge 1"></div><div><input type="password" id="jc0" placeholder="ኮድ / Code (4+)"></div></div>
+<div class="row" style="margin-top:6px"><div><input type="text" id="jn1" placeholder="ዳኛ 2 ስም / Judge 2"></div><div><input type="password" id="jc1" placeholder="ኮድ / Code (4+)"></div></div>
+<div class="row" style="margin:6px 0 10px"><div><input type="text" id="jn2" placeholder="ዳኛ 3 ስም / Judge 3"></div><div><input type="password" id="jc2" placeholder="ኮድ / Code (4+)"></div></div>
+<button id="reg">መዝግብና ቆልፍ / Register &amp; lock</button>
+</div>
+<div id="regdone" class="hidden">
+<div class="h" id="rinfo"></div>
+<div class="mono" id="rfp"></div>
+<div class="act"><button class="sec" id="rcopy">ዝርዝር ቅጂ / Copy list</button><button class="sec" id="rreset">ዳግም አስጀምር / Reset</button></div>
+<div class="card hidden" id="rpanel" style="margin:10px 0">
+<div class="h">ዳግም ለማስጀመር ሦስቱ ዳኞች ኮዳቸውን ይጻፉ / All 3 judges enter their own codes to reset</div>
+<div id="rj"></div>
+<div class="act"><button id="rgo">አስጀምር / Reset</button><button class="sec" id="rno2">ተው / Cancel</button></div>
+</div>
+<label>የአባላት ዝርዝር / Members checklist</label>
+<div class="cl" id="cl"></div>
+</div>
+</section>
+
+<section class="card hidden" id="drawc">
+<h2>2. ዕጣ / Draw <span id="rno"></span></h2>
+<div class="row">
+<div><label>የብር መጠን / Amount (ETB)</label><input type="number" id="amt" min="0"></div>
+<div><label>አሸናፊዎች / Winners</label><input type="number" id="cnt" min="1" value="1"></div>
+<div><label>የሽክርክሪት ጊዜ / Spin time</label><select id="dur"><option value="5">5s</option><option value="10" selected>10s</option><option value="20">20s</option><option value="30">30s</option><option value="60">60s</option></select></div>
+</div>
+<div class="h" id="pinfo"></div>
+<div class="card hidden" id="pendb" style="margin:8px 0;border-color:#f59e0b"><div class="h" style="margin:0 0 6px">⚠️ ያልተላከ ሪፖርት አለ፤ እስኪላክ ቁልፍም ሆነ ዕጣ አይፈቀድም / A report is waiting. Lock and draw are blocked until it is delivered.</div><button id="pendgo">ሪፖርት ላክ / Send report</button></div>
+<div class="act"><button class="sec" id="lockb">ከዕጣ በፊት ቆልፍ / Lock first</button><button id="draw">ዕጣ አውጣ / Draw</button></div>
+<div id="lockbox" class="hidden">
+<div class="h">1) ይህን ለቡድኑ ላክ / Post this to the group before the draw</div>
+<div class="mono" id="lc"></div>
+<button class="sec" id="lcopy">ቅጂ / Copy</button>
+<label class="publ">2) ይፋ ቃል ወይም ቁጥር (አባላት ከመረጡ በኋላ) / Public word or number</label>
+<input type="text" id="pw" class="pub">
+</div>
+<div class="wbox hidden" id="wbox"><button class="sec zb" id="zoom">🔍 አስፋ / Zoom</button><canvas id="wheel" width="640" height="640"></canvas></div>
+<div class="h" id="whint" style="text-align:center"></div>
+<div class="win" id="win"></div>
+<div class="hidden" id="pbox"><div class="mono" id="proof"></div><button class="sec" id="pcopy">ማስረጃ ቅጂ / Copy proof</button></div>
+</section>
+
+<section class="card" id="histc">
+<h2>3. አሸናፊዎች / Winners</h2>
+<div id="hist"></div>
+<div class="act"><button class="sec" id="hpost">ሁኔታ ለግሩፕ ላክ / Post status</button><button class="sec" id="hcopy">ዝርዝር ቅጂ / Copy winners</button></div>
+</section>
+
+<section class="card hidden" id="swapc">
+<h2>4. ዕድል መቀያየር / Swap or sell a win</h2>
+<div class="h">አሸናፊው ዕድሉን ለሌላ ሲሸጥ ወይም ሲቀይር፤ ሻጩ እንደገና ይወዳደራል / The seller returns to the draw, the buyer takes the win.</div>
+<label>ሻጭ (አሸናፊ) / Seller (winner)</label><select id="ss"></select>
+<label>ገዢ / Buyer</label><select id="sb"></select>
+<label>ዋጋ (ብር) / Price (ETB)</label><input type="number" id="sp" min="0">
+<div class="act"><button id="sgo">ቀይር / Swap</button></div>
+</section>
+
+<section class="card">
+<h2>5. ማረጋገጫ / Verify</h2>
+<label>የዕጣ ማስረጃ ለጥፍ / Paste a draw proof</label>
+<textarea id="vp" style="min-height:90px"></textarea>
+<div class="act"><button class="sec" id="vgo">ዕጣ አረጋግጥ / Check draw</button></div>
+<div class="h" id="vo"></div>
+<label style="margin-top:14px">የምዝገባ ዝርዝር ለጥፍ / Paste the registry message</label>
+<textarea id="vr" style="min-height:90px"></textarea>
+<label>ስምህ / Your name</label><input type="text" id="q2">
+<div class="act"><button class="sec" id="vrgo">ስሜን አረጋግጥ / Check my name</button></div>
+<div class="h" id="vro"></div>
+</section>
+<section class="card">
+<h2>6. ማሳወቂያ / Telegram notifications</h2>
+<div class="h">ዕጣ፣ ምዝገባ እና የዕድል ሽያጭ ለግሩፑ በራስ ይላካል። ቁልፉ በዚህ ስልክ ላይ ብቻ ይቀመጣል / Results, registry and swaps are posted to the group automatically. The token stays on this phone only.</div>
+<label>Bot token (BotFather → API Token)</label><input type="password" id="tgt" autocomplete="off">
+<label>Group chat ID</label><input type="text" id="tgc" placeholder="-100…">
+<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="tgon" style="width:auto" checked> በራስ ላክ / Auto-post</label>
+<div class="act"><button class="sec" id="tgfind">ቡድን ፈልግ / Find group</button><button class="sec" id="tgsave">አስቀምጥ / Save</button><button class="sec" id="tgtest">ሙከራ / Test</button></div>
+<div class="h" id="tgm"></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id),enc=new TextEncoder();
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+const sha=async s=>hex(await crypto.subtle.digest("SHA-256",enc.encode(s)));
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const parse=t=>t.split("\n").map(s=>s.trim()).filter(Boolean);
+const K="eqube2";let S={reg:null,fp:"",hist:[],swaps:[],amt:""};
+try{S=JSON.parse(localStorage.getItem(K))||S}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const pool=()=>{const w=new Set(S.hist.flatMap(h=>h.w));return S.reg.filter(n=>!w.has(n))};
+const cp=async(t,b)=>{try{await navigator.clipboard.writeText(t);const o=b.textContent;b.textContent="✓";setTimeout(()=>b.textContent=o,1500)}catch(e){prompt("Copy:",t)}};
+async function pick(names,seed,count){
+  const lh=await sha(names.join("\n")),n=names.length,used=new Set(),out=[];
+  count=Math.min(count,n);
+  for(let i=0;out.length<count&&i<1e5;i++){
+    const h=new Uint8Array(await crypto.subtle.digest("SHA-256",enc.encode(seed+"|"+lh+"|"+i)));
+    let v=0n;for(let j=0;j<8;j++)v=(v<<8n)|BigInt(h[j]);
+    const x=Number(v%BigInt(n));if(!used.has(x)){used.add(x);out.push(names[x])}
+  }
+  return{lh,out};
+}
+function render(){
+  const r=S.reg;
+  $("regnew").classList.toggle("hidden",!!r);
+  ["regdone","drawc","swapc"].forEach(i=>$(i).classList.toggle("hidden",!r));
+  if(!r){$("hist").innerHTML='<div class="h">ገና አሸናፊ የለም / No winners yet</div>';return}
+  const w=new Map();S.hist.forEach(h=>h.w.forEach(n=>w.set(n,h.r)));
+  $("rinfo").textContent=r.length+" አባላት / members · "+pool().length+" ብቁ / eligible";
+  $("rfp").textContent="Fingerprint: "+S.fp+(S.j?"\nJudges / ዳኞች: "+S.j.map(j=>j.n).join(" | "):"");
+  $("cl").innerHTML=r.map((n,i)=>'<div class="r"><span>'+(i+1)+". "+esc(n)+"</span><span>"+(w.has(n)?"🏆 #"+w.get(n):"○")+"</span></div>").join("");
+  $("rno").textContent="#"+(S.hist.length+1);
+  $("pendb").classList.toggle("hidden",!(S.pend&&S.pend.length));
+  $("pinfo").textContent=pool().length+" ተወዳዳሪዎች / in the draw";
+  $("hist").innerHTML=S.hist.map(h=>'<div class="r"><span><b>#'+h.r+"</b> "+esc(h.w.join(", "))+"</span><span>"+(h.a?h.a+" ብር · ":"")+h.t.slice(0,10)+"</span></div>").join("")+
+    S.swaps.map(s=>'<div class="r"><span>🔁 #'+s.r+": "+esc(s.from)+" → "+esc(s.to)+"</span><span>"+(s.p?s.p+" ብር · ":"")+s.t.slice(0,10)+"</span></div>").join("");
+  $("ss").innerHTML=S.hist.flatMap(h=>h.w.map(n=>'<option value="'+h.r+"|"+esc(n)+'">#'+h.r+" · "+esc(n)+"</option>")).join("");
+  $("sb").innerHTML=pool().map(n=>"<option>"+esc(n)+"</option>").join("");
+  if(!S.hist.length)$("hist").innerHTML='<div class="h">ገና አሸናፊ የለም / No winners yet</div>';
+}
+$("reg").onclick=async()=>{
+  if(!need())return;
+  const n=parse($("names").value);
+  if(n.length<2)return alert("ቢያንስ 2 ስም / At least 2 names");
+  if(n.some(x=>x.includes("|")))return alert('"|" አይፈቀድም / not allowed in names');
+  const d=n.filter((x,i)=>n.indexOf(x)!==i);
+  if(d.length)return alert("የተደጋገመ ስም / Duplicate: "+[...new Set(d)].join(", "));
+  if(!confirm("ከተመዘገበ በኋላ መቀየር አይቻልም። ይቀጥል? / It cannot be changed afterwards. Continue?"))return;
+  const J=[0,1,2].map(i=>({n:$("jn"+i).value.trim(),c:$("jc"+i).value}));
+  if(J.some(x=>!x.n||x.c.length<4))return alert("3 ዳኞች ስምና ቢያንስ 4 ፊደል/ቁጥር ያለው ኮድ ያስፈልጋሉ / 3 judges, each with a name and a code of 4+ characters");
+  if(new Set(J.map(x=>x.n)).size<3||new Set(J.map(x=>x.c)).size<3)return alert("ስሞችና ኮዶች የተለያዩ መሆን አለባቸው / Judge names and codes must all be different");
+  const j=[];for(const x of J){const s=hex(crypto.getRandomValues(new Uint8Array(8)));j.push({n:x.n,s,h:await sha(s+"|"+x.c)})}
+  S={reg:n,fp:await sha(n.join("\n")),hist:[],swaps:[],amt:"",j};save();
+  [0,1,2].forEach(i=>{$("jn"+i).value="";$("jc"+i).value=""});S.pend=[{tx:regPost()}];save();render();flush().then(render);
+};
+const wipe=()=>{S={reg:null,fp:"",hist:[],swaps:[],amt:""};save();render()};
+$("rreset").onclick=()=>{
+  if(!S.j){if(prompt("ዳኞች የሌሉት የድሮ ምዝገባ፤ RESET ጻፍ / Old registry without judges: type RESET")==="RESET")wipe();return}
+  $("rj").innerHTML=S.j.map((j,i)=>'<label>'+esc(j.n)+'</label><input type="password" id="rc'+i+'" placeholder="ኮድ / Code">').join("");
+  $("rpanel").classList.remove("hidden");
+};
+$("rno2").onclick=()=>$("rpanel").classList.add("hidden");
+$("rgo").onclick=async()=>{
+  for(let i=0;i<S.j.length;i++){const j=S.j[i];if(await sha(j.s+"|"+$("rc"+i).value)!==j.h)return alert("ኮድ ትክክል አይደለም / Wrong code: "+j.n)}
+  if(confirm("ሦስቱም ዳኞች ተረጋግጠዋል። ሁሉም ይጠፋል፤ ይቀጥል? / All judges verified. Everything will be erased. Continue?")){if(!need())return;if(!await tg("⚠️ ዳግም ማስጀመር / RESET\nRounds: "+S.hist.length+" · Spins: "+(S.spins||0)+"\nJudges: "+S.j.map(j=>j.n).join(" | ")+"\nሦስቱም ዳኞች ኮዳቸውን አስገብተዋል / All 3 judges entered their codes")){alert("ሪፖርቱ አልተላከም፤ ዳግም ማስጀመር አልተፈቀደም / Report not delivered; reset not allowed");return}$("rpanel").classList.add("hidden");wipe()}
+};
+$("rcopy").onclick=()=>cp("ዕቁቤ ምዝገባ / Eqube registry\nMembers: "+S.reg.length+"\nFingerprint: "+S.fp+(S.j?"\nJudges: "+S.j.map(j=>j.n).join(" | "):"")+"\n"+S.reg.map((n,i)=>(i+1)+". "+n).join("\n"),$("rcopy"));
+$("hcopy").onclick=()=>cp("ዕቁቤ አሸናፊዎች / Eqube winners\n"+S.hist.map(h=>"#"+h.r+" "+h.w.join(", ")+(h.a?" · "+h.a+" ብር":"")+" · "+h.t.slice(0,10)).join("\n")+(S.swaps.length?"\nSwaps:\n"+S.swaps.map(s=>"#"+s.r+" "+s.from+" → "+s.to+(s.p?" · "+s.p+" ብር":"")).join("\n"):""),$("hcopy"));
+$("sgo").onclick=async()=>{
+  const[r,from]=$("ss").value.split("|"),to=$("sb").value;
+  if(!r||!to)return alert("ሻጭና ገዢ ምረጥ / Choose seller and buyer");
+  if(!confirm(from+" → "+to+" ?"))return;
+  if(!need())return;
+  const pr=$("sp").value.trim();
+  if(!await tg("🔁 ዕድል ተቀየረ / Win swapped\n#"+r+": "+from+" → "+to+(pr?"\n"+pr+" ብር / ETB":"")+"\nየቀሩ / Remaining: "+pool().length))return alert("ሪፖርቱ ለግሩፑ አልተላከም፤ ለውጡ አልተፈቀደም / Report not delivered; swap not applied");
+  const h=S.hist.find(h=>h.r==r);h.w[h.w.indexOf(from)]=to;
+  S.swaps.push({r:+r,from,to,p:pr,t:new Date().toISOString()});save();$("sp").value="";render();
+};
+const TK="eqube_tg";
+const cfg=()=>{try{return JSON.parse(localStorage.getItem(TK))||{}}catch(e){return{}}};
+const tgmsg=t=>{$("tgm").textContent=t};
+const chunk=t=>{const o=[];let c="";for(const l of t.split("\n")){if((c+l).length>3800){o.push(c);c=""}c+=l+"\n"}if(c.trim())o.push(c);return o};
+const fmt0=t=>t.split("\n").map(l=>{const e=esc(l);return /^(Public word:|ይፋ ቃል)/.test(l)?"<b><u>"+e+"</u></b>":e}).join("\n");
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const cfgOk=()=>{const c=cfg();return !!(c.t&&c.c&&c.on!==false)};
+const PEND="ያልተላከ ሪፖርት አለ፤ መጀመሪያ ላክ / A report is still waiting; send it first";
+function need(){if(cfgOk())return true;alert("ሪፖርት ለቴሌግራም ግሩፑ መላክ ግዴታ ነው፤ '6. ማሳወቂያ'ን አዋቅርና 'በራስ ላክ'ን አብራ / Reporting to the Telegram group is required: set up section 6 and keep Auto-post on");return false}
+async function api(method,body,isForm){
+  const c=cfg();
+  for(let k=0;k<4;k++){
+    try{
+      const r=await fetch("https://api.telegram.org/bot"+c.t+"/"+method,isForm?{method:"POST",body}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+      const j=await r.json();
+      if(j.ok)return j;
+      const w=j.parameters&&j.parameters.retry_after;
+      if(w&&k<3){tgmsg("⏳ "+w+"s");await sleep((w+1)*1000);continue}
+      tgmsg("❌ "+(j.description||"error"));return null;
+    }catch(e){tgmsg("❌ ኢንተርኔት / Network error");if(k<3)await sleep(2000)}
+  }
+  return null;
+}
+async function tgVideo(b,cap){
+  const c=cfg();
+  if(!b||!b.size){tgmsg("❌ Video: empty recording");return false}
+  for(const[m,fld] of[["sendVideo","video"],["sendDocument","document"]]){
+    const f=new FormData();f.append("chat_id",c.c);f.append("caption",cap);
+    if(m==="sendVideo")f.append("supports_streaming","true");
+    f.append(fld,b,"spin.mp4");
+    if(await api(m,f,true))return true;
+    tgmsg($("tgm").textContent+" · "+Math.round(b.size/1024)+" KB");
+  }
+  return false;
+}
+const fmt=t=>{const i=t.indexOf("\n§§\n");return i<0?fmt0(t):fmt0(t.slice(0,i))+"\n<blockquote expandable>"+esc(t.slice(i+4).trim())+"</blockquote>"};
+const tgLock=()=>tg("🔒 ዕጣ #"+(S.hist.length+1)+" ተቆልፏል / locked (#"+S.locks+")\nPool: "+pool().length+" · Winners: "+lock.c+"\nይፋ ቃል ወይም ቁጥር ላኩ / Send a public word or number.\n§§\nFingerprint: "+lock.lh+"\nCommitment: "+lock.commit);
+async function tg(text,manual){
+  const c=cfg();
+  if(!c.t||!c.c||(!manual&&c.on===false)){if(manual)tgmsg("ማሳወቂያ አልተዋቀረም / Notifications not set up");return false}
+  const i0=text.indexOf("\n§§\n");
+  for(const p of (i0<0||text.length<3800)?chunk(text):[...chunk(text.slice(0,i0)),...chunk(text.slice(i0+4)).map(x=>"\n§§\n"+x)]){
+    if(!await api("sendMessage",{chat_id:c.c,text:fmt(p),parse_mode:"HTML"}))return false;
+  }
+  tgmsg("✅ ለግሩፑ ተልኳል / Sent to the group");return true;
+}
+async function flush(){
+  while(S.pend&&S.pend.length){
+    const it=S.pend[0];
+    const tx=it.tx||(it.h+(it.v?"":"\n⚠️ ቪዲዮ አልተላከም / Spin video not delivered")+"\n§§\n"+it.tl);
+    if(!await tg(tx))return false;
+    S.pend.shift();save();
+  }
+  return true;
+}
+$("pendgo").onclick=async()=>{await flush();render()};
+const tgSave=()=>{try{localStorage.setItem(TK,JSON.stringify({t:$("tgt").value.trim(),c:$("tgc").value.trim(),on:$("tgon").checked}))}catch(e){}tgmsg("✅ ተቀምጧል / Saved")};
+$("tgsave").onclick=tgSave;
+$("tgtest").onclick=()=>{tgSave();tg("✅ ዕቁቤ ተገናኝቷል / Eqube connected",true)};
+$("tgfind").onclick=async()=>{
+  const t=$("tgt").value.trim();if(!t){tgmsg("Token ጻፍ / Enter the token first");return}
+  try{
+    const j=await(await fetch("https://api.telegram.org/bot"+t+"/getUpdates")).json();
+    if(!j.ok){tgmsg("❌ "+(j.description||"error"));return}
+    const g=j.result.map(u=>(u.message||u.my_chat_member||u.channel_post||{}).chat).filter(c=>c&&c.type!=="private");
+    if(!g.length){tgmsg("በግሩፑ ውስጥ /start@የቦትህስም ጻፍና እንደገና ሞክር / Send /start@yourbot in the group, then try again");return}
+    const c=g[g.length-1];$("tgc").value=c.id;tgmsg("✅ "+(c.title||"")+" ("+c.id+") · አስቀምጥ ተጫን / press Save");
+  }catch(e){tgmsg("❌ ኢንተርኔት / Network error")}
+};
+const regText=()=>"ዕቁቤ ምዝገባ / Eqube registry\nMembers: "+S.reg.length+"\nFingerprint: "+S.fp+(S.j?"\nJudges: "+S.j.map(j=>j.n).join(" | "):"")+"\n"+S.reg.map((n,i)=>(i+1)+". "+n).join("\n");
+const regPost=()=>"ዕቁቤ ምዝገባ / Eqube registry\nMembers: "+S.reg.length+(S.j?"\nJudges: "+S.j.map(j=>j.n).join(" | "):"")+"\n"+S.reg.map((n,i)=>(i+1)+". "+n).join("\n")+"\n§§\nFingerprint: "+S.fp;
+const stat=()=>{const w=new Map();S.hist.forEach(h=>h.w.forEach(n=>w.set(n,h.r)));return "📋 የዕቁቤ ሁኔታ / Eqube status\nአሸናፊዎች / Winners: "+S.hist.length+" · የቀሩ / Remaining: "+pool().length+"\n"+S.reg.map((n,i)=>(i+1)+". "+n+(w.has(n)?" 🏆#"+w.get(n):"")).join("\n")};
+$("hpost").onclick=async()=>{if(!await tg(stat(),true))cp(stat(),$("hpost"))};
+let lock=null;
+const clr=()=>{lock=null;$("lockbox").classList.add("hidden");$("pw").value=""};
+$("lockb").onclick=async()=>{
+  if(!need())return;
+  if(!await flush()){alert(PEND);return}
+  const p=pool(),c=Math.max(1,+$("cnt").value||1);
+  if(p.length<1)return;
+  if(!await tg(stat())){alert("የአባላት ዝርዝርና ሁኔታ ለግሩፑ አልተላከም፤ አልተቆለፈም / The member list and status were not delivered; not locked");return}
+  const b=new Uint8Array(16);crypto.getRandomValues(b);const secret=hex(b);
+  lock={secret,commit:await sha(secret),lh:await sha(p.join("\n")),c};
+  S.locks=(S.locks||0)+1;save();
+  if(!await tgLock()){lock=null;alert("ቁልፉ ለግሩፑ አልተላከም / The lock was not delivered to the group");return}
+  $("lc").textContent="ዕጣ #"+(S.hist.length+1)+" ተቆልፏል / locked\nPool: "+p.length+"\nFingerprint: "+lock.lh+"\nWinners: "+c+"\nCommitment: "+lock.commit;
+  $("lockbox").classList.remove("hidden");
+};
+$("lcopy").onclick=()=>cp($("lc").textContent+"\nይፋ ቃል ወይም ቁጥር ላኩ / Send a public word or number.",$("lcopy"));
+$("zoom").onclick=()=>$("wbox").classList.toggle("z");
+$("wheel").onclick=()=>$("wbox").classList.toggle("z");
+function spin(names,out,D){
+  const cv=$("wheel"),cx=cv.getContext("2d"),Z=cv.width,R=Z/2-14;
+  let seg=names.slice();$("whint").textContent="";
+  if(seg.length>40){
+    seg=out.slice();const rest=names.filter(n=>!out.includes(n));
+    while(seg.length<40&&rest.length)seg.push(rest.splice(Math.random()*rest.length|0,1)[0]);
+    seg.sort(()=>Math.random()-.5);
+    $("whint").textContent="40 ስሞች ናሙና / sample of 40 names. ትክክለኛው አሸናፊ በማስረጃው ይወሰናል / The proof decides.";
+  }
+  const dr=rot=>{
+    const n=seg.length,a=2*Math.PI/n;cx.clearRect(0,0,Z,Z);
+    for(let i=0;i<n;i++){
+      cx.beginPath();cx.moveTo(Z/2,Z/2);cx.arc(Z/2,Z/2,R,rot+i*a,rot+(i+1)*a);cx.closePath();
+      cx.fillStyle="hsl("+i*360/n+",65%,"+(i%2?45:55)+"%)";cx.fill();cx.strokeStyle="rgba(255,255,255,.6)";cx.lineWidth=2;cx.stroke();
+      cx.save();cx.translate(Z/2,Z/2);cx.rotate(rot+(i+.5)*a);cx.textAlign="right";cx.fillStyle="#fff";
+      cx.font="bold "+Math.max(14,Math.min(30,480/n|0))+"px system-ui,sans-serif";
+      let t=seg[i];if(t.length>14)t=t.slice(0,13)+"…";cx.fillText(t,R-16,8);cx.restore();
+    }
+    cx.beginPath();cx.arc(Z/2,Z/2,26,0,7);cx.fillStyle="#fff";cx.fill();
+    cx.beginPath();cx.moveTo(Z/2-18,2);cx.lineTo(Z/2+18,2);cx.lineTo(Z/2,40);cx.closePath();
+    cx.fillStyle="#ef4444";cx.fill();cx.strokeStyle="#fff";cx.lineWidth=3;cx.stroke();
+  };
+  let rot=0;dr(0);const sh=[];
+  const to=i=>new Promise(res=>{
+    const a=2*Math.PI/seg.length,tg=-Math.PI/2-(i+.5)*a;
+    const d=(((tg-rot)%(2*Math.PI))+2*Math.PI)%(2*Math.PI)+2*Math.PI*(D/2|0),s=rot,t0=performance.now();
+    const f=now=>{const p=Math.min(1,(now-t0)/(D*1000)),e=1-Math.pow(1-p,3);rot=s+d*e;dr(rot);p<1?requestAnimationFrame(f):res()};
+    requestAnimationFrame(f);
+  });
+  const hold=name=>new Promise(res=>{const t0=performance.now();const f=n=>{dr(rot);cx.fillStyle="rgba(0,0,0,.78)";cx.fillRect(0,Z/2-64,Z,128);cx.fillStyle="#fff";cx.textAlign="center";cx.font="bold 46px system-ui,sans-serif";cx.fillText("🏆 "+(name.length>20?name.slice(0,19)+"…":name),Z/2,Z/2+16);n-t0<2000?requestAnimationFrame(f):res()};requestAnimationFrame(f)});
+  return(async()=>{
+    for(let k=0;k<out.length;k++){
+      if(k<5){await to(seg.indexOf(out[k]));await hold(out[k])}
+      sh.push(out[k]);$("win").innerHTML=sh.map(w=>"🏆 "+esc(w)).join("<br>");
+    }
+  })();
+}
+$("draw").onclick=async()=>{
+  if(!need())return;
+  if(!await flush()){alert(PEND);return}
+  const MT=window.MediaRecorder&&["video/mp4;codecs=avc1","video/mp4"].find(t=>MediaRecorder.isTypeSupported(t));
+  if(!MT){alert("ይህ ስልክ የሽክርክሪት ቪዲዮ መቅዳት አይችልም፤ ቪዲዮ መላክ ግዴታ ነው / This phone cannot record the spin video, which is required");return}
+  const p=pool(),c=Math.max(1,+$("cnt").value||1),D=+$("dur").value;
+  if(!lock){alert("መጀመሪያ 'ከዕጣ በፊት ቆልፍ'ን ተጫን / Lock the draw first");return}
+  if(!$("pw").value.trim()){alert("ይፋ ቃል ወይም ቁጥር ጻፍ / Enter the public word first");$("pw").focus();return}
+  if(p.length<1)return alert("ሁሉም አሸንፈዋል / Everyone has won");
+  if(lock.lh!==await sha(p.join("\n"))||lock.c!==c){alert("ዝርዝር ወይም ብዛት ተቀይሯል፤ እንደገና ቆልፍ / Changed after locking; lock again");clr();return}
+  const commit=lock.commit,secret=lock.secret,word=$("pw").value.trim(),seed=await sha(secret+"|"+word);
+  const{lh,out}=await pick(p,seed,c),now=new Date().toISOString(),r=S.hist.length+1,a=$("amt").value.trim();
+  $("draw").disabled=true;
+  S.spins=(S.spins||0)+1;const sn=S.spins;save();
+  if(!await tg("🎡 ሽክርክሪት #"+sn+" ተጀመረ / Spin #"+sn+" started\nዕጣ / Round #"+r+(a?" · "+a+" ብር / ETB":"")+"\nPublic word: "+word+"\n§§\nCommitment: "+commit)){$("draw").disabled=false;alert("ሽክርክሪቱ መጀመሩ ለግሩፑ አልተላከም፤ ዕጣው አልተጀመረም / The start was not reported to the group; the draw did not start");return}
+  const pf=["ዕቁቤ ዕጣ #"+r+" / Eqube draw #"+r,"Amount: "+(a||"-")+" ETB","Time: "+now,"Pool: "+p.join(" | "),"Winner(s): "+out.join(" | "),"List fingerprint: "+lh,"Seed: "+seed,"Winners drawn: "+out.length,"Commitment: "+commit,"Secret: "+secret,"Public word: "+word];
+  S.hist.push({r,a,w:out,t:now,sn});S.amt=a;
+  const it={h:"🏆 ዕጣ #"+r+" / Draw #"+r+" · ሽክርክሪት / Spin #"+sn+"\n"+out.join(" | ")+(a?"\n"+a+" ብር / ETB":"")+"\nየቀሩ / Remaining: "+pool().length+"\nPublic word: "+word,tl:pf.join("\n"),v:false};
+  S.pend=S.pend||[];S.pend.push(it);save();clr();
+  $("pbox").classList.add("hidden");$("win").innerHTML="";
+  $("wbox").classList.remove("hidden");$("wbox").scrollIntoView({behavior:"smooth"});
+  let wl=null;try{wl=await navigator.wakeLock.request("screen")}catch(e){}
+  let rc=null;const ch=[];
+  try{rc=new MediaRecorder($("wheel").captureStream(30),{mimeType:MT,videoBitsPerSecond:1500000});rc.ondataavailable=e=>{if(e.data.size)ch.push(e.data)};rc.start(500)}catch(e){rc=null}
+  await spin(p,out,D);
+  let blob=null;
+  if(rc){await new Promise(res=>{rc.onstop=res;try{rc.stop()}catch(e){res()}});blob=new Blob(ch,{type:"video/mp4"})}
+  try{wl&&wl.release()}catch(e){}
+  $("proof").innerHTML=pf.map(l=>l.startsWith("Public word:")?'<span class="pubt">'+esc(l)+"</span>":esc(l)).join("\n");$("pbox").classList.remove("hidden");
+  setTimeout(()=>$("wbox").classList.remove("z"),2500);
+  let vok=false;for(let k=0;k<2&&!vok;k++)vok=await tgVideo(blob,"🎡 ዕጣ #"+r+" · ሽክርክሪት #"+sn);
+  if(vok){it.v=true;save()}
+  await flush();
+  $("draw").disabled=false;render();
+};
+$("pcopy").onclick=()=>cp($("proof").textContent,$("pcopy"));
+$("vgo").onclick=async()=>{
+  const p=$("vp").value,o=$("vo");
+  const g=k=>{const m=p.match(new RegExp("^"+k+":\\s*(.*)$","mi"));return m?m[1].trim():""};
+  const pl=g("Pool").split("|").map(s=>s.trim()).filter(Boolean),seed=g("Seed"),fp=g("List fingerprint"),cnt=parseInt(g("Winners drawn"))||1,cl=g("Winner\\(s\\)"),cm=g("Commitment"),sc=g("Secret");
+  let wd=g("Public word");if(wd==="(none)")wd="";
+  if(!pl.length||!seed){o.textContent="ማስረጃውን ለጥፍ / Paste the full proof";return}
+  const R=[],ad=(ok,t)=>R.push((ok?"✅ ":"❌ ")+t);
+  ad(await sha(pl.join("\n"))===fp,"ዝርዝሩ ከfingerprint ጋር ይመሳሰላል / Pool matches fingerprint");
+  if(cm&&sc){
+    ad(await sha(sc)===cm,"ሚስጥሩ ከቁልፉ ጋር ይመሳሰላል / Secret matches commitment");
+    ad(await sha(sc+"|"+wd)===seed,"Seed ከሚስጥርና ከይፋ ቃል የተሰራ ነው / Seed = secret + public word");
+  }else R.push("ℹ️ ፈጣን ዕጣ / Quick draw, not locked");
+  const{out}=await pick(pl,seed,cnt);
+  ad(out.join(" | ")===cl,"አሸናፊ(ዎች) ትክክል ነው / Winners match: "+out.join(" | "));
+  o.innerHTML=R.map(esc).join("<br>");
+};
+$("vrgo").onclick=async()=>{
+  const t=$("vr").value,L=t.split(/\r?\n/).map(s=>s.trim().match(/^\d+[.)]\s*(.+)$/)).filter(Boolean).map(m=>m[1].trim());
+  const fm=t.match(/^Fingerprint:\s*(\S+)/mi),q=$("q2").value.trim().toLowerCase(),o=$("vro"),R=[];
+  if(!L.length){o.textContent="ቁጥር ያላቸው ስሞች አልተገኙም / No numbered names found. Paste the Copy-list message. የምዝገባ መልእክቱን ለጥፍ / Paste the registry message";return}
+  R.push((!fm?"⚠️ Fingerprint አልተገኘም / No Fingerprint line found":await sha(L.join("\n"))===fm[1]?"✅ ዝርዝሩ ከfingerprint ጋር ይመሳሰላል / List matches fingerprint":"❌ ዝርዝሩ ተቀይሯል / List was changed"));
+  if(q){const m=L.map((n,i)=>[n,i+1]).filter(x=>x[0].toLowerCase().includes(q));R.push(m.length?m.slice(0,5).map(x=>"✅ #"+x[1]+" "+x[0]).join("\n"):"❌ አልተገኘም / Not found")}
+  o.innerHTML=R.map(esc).join("<br>").replace(/\n/g,"<br>");
+};
+{const c0=cfg();$("tgt").value=c0.t||"";$("tgc").value=c0.c||"";$("tgon").checked=c0.on!==false}
+$("amt").value=S.amt||"";render();
+if(S.pend&&S.pend.length&&cfgOk())flush().then(render);
+</script>
+</body>
+</html>
