@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ዕቁቤ / Eqube</title>
+<style>
+:root{
+  --bg:#f3f6f9;--c:#ffffff;--t:#14181f;--m:#586274;--l:#cbd5e1;--grid:#94a3b8;
+  --a:#0f766e;--at:#ffffff;--ok:#0f766e;--xl-hdr:#e2e8f0;--xl-alt:#f8fafc;--xl-sel:#fef9c3;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1117;--c:#161b22;--t:#e6edf3;--m:#8b949e;--l:#30363d;--grid:#484f58;
+    --a:#2dd4bf;--at:#042f2e;--ok:#2dd4bf;--xl-hdr:#21262d;--xl-alt:#12171e;--xl-sel:#3b2f0b
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1117;--c:#161b22;--t:#e6edf3;--m:#8b949e;--l:#30363d;--grid:#484f58;
+  --a:#2dd4bf;--at:#042f2e;--ok:#2dd4bf;--xl-hdr:#21262d;--xl-alt:#12171e;--xl-sel:#3b2f0b
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t);font:15.5px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Ethiopic",sans-serif}
+main{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:16px 14px 56px}
+h1{font-size:1.55rem;margin:6px 0 2px;letter-spacing:-.01em}
+h2{font-size:1.06rem;margin:0 0 10px;display:flex;align-items:center;gap:6px}
+.card{background:var(--c);border:1px solid var(--l);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+textarea,input,select{width:100%;background:var(--bg);color:var(--t);border:1px solid var(--l);border-radius:9px;padding:9px 10px;font:inherit;transition:border-color .15s,box-shadow .15s}
+textarea:focus,input:focus,select:focus{outline:none;border-color:var(--a);box-shadow:0 0 0 3px rgba(15,118,110,.14)}
+textarea{min-height:125px;resize:vertical}
+label{display:block;font-size:.84rem;color:var(--m);margin:8px 0 3px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>div{flex:1;min-width:110px}
+button{background:var(--a);color:var(--at);border:0;border-radius:9px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;transition:transform .08s,opacity .15s}
+button:active{transform:scale(.98)}
+button.sec{background:transparent;color:var(--t);border:1px solid var(--l)}
+button.sec:hover{background:rgba(128,128,128,.08)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.h{font-size:.84rem;color:var(--m);margin:6px 0}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mono{font:.76rem ui-monospace,Menlo,monospace;word-break:break-all;white-space:pre-wrap;background:var(--bg);border:1px solid var(--l);border-radius:8px;padding:9px;margin:6px 0}
+
+/* Excel-style Sheet & Grid */
+.xl-wrap{max-height:310px;overflow:auto;border:1px solid var(--grid);border-radius:8px;background:var(--c);margin-top:6px}
+table.xl{width:100%;border-collapse:collapse;font-size:.88rem}
+table.xl th{position:sticky;top:0;z-index:2;background:var(--xl-hdr);color:var(--t);font-weight:700;text-align:left;padding:7px 8px;border:1px solid var(--grid);white-space:nowrap}
+table.xl td{padding:6px 8px;border:1px solid var(--grid);vertical-align:middle}
+table.xl tbody tr:nth-child(even){background:var(--xl-alt)}
+table.xl tbody tr.picked{background:var(--xl-sel)}
+table.xl input.xl-in{width:135px;padding:4px 7px;font-size:.84rem;border-radius:6px;border:1px solid var(--grid);background:var(--c)}
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:.76rem;font-weight:700}
+.b-ok{background:rgba(16,185,129,.16);color:#047857}
+.b-wait{background:rgba(245,158,11,.2);color:#b45309}
+.b-win{background:rgba(59,130,246,.16);color:#1d4ed8}
+@media (prefers-color-scheme:dark){
+  .b-ok{color:#34d399}.b-wait{color:#fbbf24}.b-win{color:#60a5fa}
+}
+
+/* Live Notification Banner */
+.live-toast{
+  background:linear-gradient(135deg,rgba(15,118,110,.14),rgba(245,158,11,.14)),var(--c);position:sticky;top:0;z-index:40;
+  border:1px solid var(--a);border-radius:10px;padding:8px 11px;margin:8px 0;
+  font-size:.88rem;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:8px
+}
+.pulse-dot{width:9px;height:9px;border-radius:50%;background:#10b981;display:inline-block;flex-shrink:0;box-shadow:0 0 0 3px rgba(16,185,129,.25)}
+
+/* Inline message banner (replaces native alert/confirm/prompt safely) */
+.ui-banner{
+  position:sticky;top:0;z-index:41;border:1px solid var(--a);background:var(--c);border-radius:10px;padding:9px 12px;margin:8px 0;
+  font-size:.86rem;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06)
+}
+
+.r{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--l)}
+.win{font-size:1.35rem;font-weight:700;color:var(--ok);text-align:center;padding:10px;word-break:break-word}
+.wbox{text-align:center;margin:8px 0}#wheel{width:100%;max-width:320px;height:auto;cursor:zoom-in}
+.wbox.z{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.93);display:flex;align-items:center;justify-content:center;margin:0}
+.z #wheel{max-width:min(94vw,94vh);cursor:zoom-out}
+.z .zb{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px}
+.pub{border:2px solid #f59e0b;background:rgba(245,158,11,.12);font-weight:700}
+.publ{color:#b45309;font-weight:700;border-left:4px solid #f59e0b;padding-left:8px}
+.pubt{background:rgba(245,158,11,.28);color:#b45309;font-weight:700;border-radius:4px;padding:0 3px}
+.hidden{display:none!important}
+button,input,select,textarea{touch-action:manipulation}
+button{-webkit-tap-highlight-color:transparent}
+button.busy{opacity:.55;pointer-events:none}
+button.busy::after{content:" ⏳"}
+</style>
+</head>
+<body>
+<main>
+<h1>🎲 ዕቁቤ / Eqube</h1>
+<div class="h">ፍትሃዊ ዕጣ ከማረጋገጫ ጋር / Provably fair draw</div>
+
+<div class="live-toast hidden" id="livebar">
+  <span><span class="pulse-dot"></span> <span id="livetxt"></span></span>
+  <button class="sec" id="liveclr" style="padding:3px 8px;font-size:.76rem">✕</button>
+</div>
+
+<div class="ui-banner hidden" id="uibar">
+  <span id="uitxt"></span>
+  <button class="sec" id="uiclr" style="padding:3px 8px;font-size:.76rem">✕</button>
+</div>
+
+<section class="card" id="lotc">
+<h2 style="margin-bottom:12px"><span style="font-weight:800;text-decoration:underline;text-underline-offset:4px">🎯 የዛሬ ዕድል / Today's Luck</span></h2>
+<div class="row">
+  <div><label>የአንድ ዕጣ ዋጋ / Price (ETB)</label><input type="number" id="lotprice" min="0"></div>
+  <div><label>ደራሽ በቁጥር / Prize (ETB)</label><input type="number" id="lotprize" min="0"></div>
+</div>
+<label>ደራሽ በፊደል (አማራጭ) / Prize in words (optional)</label>
+<input type="text" id="lotprizewords" placeholder="ለምሳሌ፡ አንድ መቶ ሺህ ብር / e.g. One hundred thousand Birr">
+
+<div class="row">
+  <div><label>የዕጣ ቀን / Draw date</label><input type="date" id="lotdate"></div>
+  <div><label>ሰዓት / Time</label><input type="time" id="lottime"></div>
+</div>
+<div class="row">
+  <div><label>የዕጣ ቁጥሮች ብዛት / Total numbers</label><input type="number" id="lottotal" min="2" max="200" value="25"></div>
+  <div><label>ለአንድ ሰው / Max per person (0 = ያልተገደበ)</label><input type="number" id="lotmax" min="0" value="0"></div>
+</div>
+<label>የክፍያ አማራጮች (በአንድ መስመር አንዱ) / Payment options (one per line)</label>
+<textarea id="lotpay" style="min-height:80px" placeholder="CBE 1000…… ስም&#10;Telebirr 09……"></textarea>
+<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="lotrem" style="width:auto" checked> ዕለታዊ ማስታወሻ በራስ / Daily reminder (while this page is open)</label>
+<div class="act">
+  <button id="lotpost">ለግሩፑ ላክና ሰካ / Post &amp; pin</button>
+  <button class="sec" id="lotsave">አስቀምጥ / Save</button>
+  <button class="sec" id="lotrefr">አድስ / Refresh</button>
+</div>
+<div class="h" id="lotmsg"></div>
+
+<label style="margin-top:10px">📊 የቁጥር ምርጫ እና ክፍያ ሰንጠረዥ / Picks &amp; Payment Sheet</label>
+<div id="lotclaims"></div>
+
+<div class="act"><button class="sec" id="lotbuild">ከከፈሉት ዝርዝር ፍጠር / Build the list from paid entries</button></div>
+<div class="h">ቁጥሮቹ ከመረጡት ጋር በምዝገባ ሳጥን ውስጥ "ስም (#17)" ተብለው ይሞላሉ፤ ከዚያ መዝግብና ቆልፍ ትጫናለህ። / The registration box is filled with "Name (#17)" lines; then you register and lock.</div>
+</section>
+
+<section class="card">
+<h2>1. ምዝገባ / Registration</h2>
+<div id="regnew">
+<label>ስሞችን አስገባ (በአንድ መስመር አንድ ስም) / Names, one per line</label>
+<textarea id="names"></textarea>
+<div class="h">ከተመዘገበ በኋላ ማንም መቀየር አይችልም / Nobody can edit after registering</div>
+<label>3 ዳኞች (ስምና የግል ኮድ) / 3 judges (name and private code)</label>
+<div class="h">እያንዳንዱ ዳኛ የራሱን ኮድ ራሱ ይጻፍ። ዳግም ለማስጀመር ሦስቱም ኮዶች ያስፈልጋሉ / Each judge types their own code. All 3 codes are needed to reset.</div>
+<div class="row"><div><input type="text" id="jn0" placeholder="ዳኛ 1 ስም / Judge 1"></div><div><input type="password" id="jc0" placeholder="ኮድ / Code (4+)"></div></div>
+<div class="row" style="margin-top:6px"><div><input type="text" id="jn1" placeholder="ዳኛ 2 ስም / Judge 2"></div><div><input type="password" id="jc1" placeholder="ኮድ / Code (4+)"></div></div>
+<div class="row" style="margin:6px 0 10px"><div><input type="text" id="jn2" placeholder="ዳኛ 3 ስም / Judge 3"></div><div><input type="password" id="jc2" placeholder="ኮድ / Code (4+)"></div></div>
+<button id="reg">መዝግብና ቆልፍ / Register &amp; lock</button>
+</div>
+<div id="regdone" class="hidden">
+<div class="h" id="rinfo"></div>
+<div class="mono" id="rfp"></div>
+<div class="act"><button class="sec" id="rcopy">ዝርዝር ቅጂ / Copy list</button><button class="sec" id="rreset">ዳግም አስጀምር / Reset</button></div>
+<div class="card hidden" id="rpanel" style="margin:10px 0">
+<div class="h">ሦስቱ ዳኞች ኮዳቸውን ይጻፉ / All 3 judges enter their own codes</div>
+<div id="rj"></div>
+<div class="act"><button id="rgo">አስጀምር / Reset</button><button class="sec" id="rno2">ተው / Cancel</button></div>
+</div>
+<label>የአባላት ዝርዝር (Excel Sheet) / Members checklist</label>
+<div class="xl-wrap" id="cl"></div>
+</div>
+</section>
+
+<section class="card hidden" id="confc">
+<h2>✅ ስም ማረጋገጫ / Name confirmation</h2>
+<div class="h">አባላት ስማቸውን በግሩፑ ካላረጋገጡ ወይም ውስብስብ ከሆነባቸው፣ አንተ ራስህ በቀጥታ እዚህ ማረጋገጥ ትችላለህ፤ በስማቸው ቦታም ማን እንዳረጋገጠላቸው በግልጽ ይታያል።</div>
+<label style="display:flex;gap:8px;align-items:center;margin:8px 0">
+  <input type="checkbox" id="confreq" style="width:auto" checked>
+  <span><b>ስም ማረጋገጥ ግዴታ ይሁን (ON / OFF)</b> — OFF ከሆነ አባላት ሳያረጋግጡ ዕጣውን መምታት ትችላለህ</span>
+</label>
+<div class="mono" id="cst"></div>
+<div class="act"><button id="cstart">ማረጋገጫ ጀምር / Start</button><button class="sec" id="cref">አድስ / Refresh</button><button class="sec" id="crem">አስታውስ / Remind</button><button class="sec" id="cclr">ክርክር አጽዳ / Clear disputes</button></div>
+<label style="margin-top:12px">📋 የአባላት ስም ማረጋገጫ ሰንጠረዥ (አዘጋጅ ያረጋግጥ / ማን እንዳረጋገጠ)</label>
+<div id="confadmin"></div>
+</section>
+
+<section class="card hidden" id="drawc">
+<h2>2. ዕጣ / Draw <span id="rno"></span></h2>
+<div class="row">
+<div><label>የብር መጠን / Amount (ETB)</label><input type="number" id="amt" min="0"></div>
+<div><label>አሸናፊዎች / Winners</label><input type="number" id="cnt" min="1" value="1"></div>
+<div><label>የሽክርክሪት ጊዜ / Spin time</label><select id="dur"><option value="5">5s</option><option value="10" selected>10s</option><option value="20">20s</option><option value="30">30s</option><option value="60">60s</option></select></div>
+</div>
+<div class="h" id="pinfo"></div>
+<div class="h" id="vst" style="font-weight:700"></div>
+<div class="act" style="margin:0 0 8px"><button class="sec" id="vclr">ተቃውሞ አጽዳ (3 ዳኞች) / Clear objection (judges)</button></div>
+<div class="card hidden" id="pendb" style="margin:8px 0;border-color:#f59e0b"><div class="h" style="margin:0 0 6px">⚠️ ያልተላከ ሪፖርት አለ፤ እስኪላክ ቁልፍም ሆነ ዕጣ አይፈቀድም / A report is waiting. Lock and draw are blocked until it is delivered.</div><button id="pendgo">ሪፖርት ላክ / Send report</button></div>
+<div class="act"><button class="sec" id="lockb">ከዕጣ በፊት ቆልፍ / Lock first</button><button id="draw">ዕጣ አውጣ / Draw</button></div>
+<div id="lockbox" class="hidden">
+<div class="h">1) ይህን ለቡድኑ ላክ / Post this to the group before the draw</div>
+<div class="mono" id="lc"></div>
+<button class="sec" id="lcopy">ቅጂ / Copy</button>
+<label class="publ">2) ይፋ ቃል ወይም ቁጥር (አባላት ከመረጡ በኋላ) / Public word or number</label>
+<input type="text" id="pw" class="pub">
+</div>
+<div class="wbox hidden" id="wbox"><button class="sec zb" id="zoom">🔍 አስፋ / Zoom</button><canvas id="wheel" width="640" height="640"></canvas></div>
+<div class="h" id="whint" style="text-align:center"></div>
+<div class="h" id="dst" style="text-align:center;font-weight:700"></div>
+<div class="win" id="win"></div>
+<div class="hidden" id="pbox"><div class="mono" id="proof"></div><button class="sec" id="pcopy">ማስረጃ ቅጂ / Copy proof</button></div>
+</section>
+
+<section class="card" id="histc">
+<h2>3. አሸናፊዎች / Winners</h2>
+<div id="hist"></div>
+<div class="row" style="margin-top:8px">
+  <div><label>የተላከ መጠን (ብር) / Payout amount (ETB)</label><input type="number" id="payamt" min="0" placeholder="ለምሳሌ 100000"></div>
+  <div><label>ማጣቀሻ ቁጥር / Reference (optional)</label><input type="text" id="payref" placeholder="Ref / ኮድ"></div>
+</div>
+<div class="act"><button class="sec" id="paygo">💸 ክፍያ ሪፖርት / Report payout</button><button class="sec" id="hpost">ሁኔታ ለግሩፕ ላክ / Post status</button><button class="sec" id="hcopy">ዝርዝር ቅጂ / Copy winners</button></div>
+</section>
+
+<section class="card hidden" id="swapc">
+<h2>4. ዕድል መቀያየር / Swap or sell a win</h2>
+<div class="h">አሸናፊው ዕድሉን ለሌላ ሲሸጥ ወይም ሲቀይር፤ ሻጩ እንደገና ይወዳደራል / The seller returns to the draw, the buyer takes the win.</div>
+<label>ሻጭ (አሸናፊ) / Seller (winner)</label><select id="ss"></select>
+<label>ገዢ / Buyer</label><select id="sb"></select>
+<label>ዋጋ (ብር) / Price (ETB)</label><input type="number" id="sp" min="0">
+<div class="act"><button id="sgo">ቀይር / Swap</button></div>
+</section>
+
+<section class="card">
+<h2>5. ማረጋገጫ / Verify</h2>
+<label>የዕጣ ማስረጃ ለጥፍ / Paste a draw proof</label>
+<textarea id="vp" style="min-height:90px"></textarea>
+<div class="act"><button class="sec" id="vgo">ዕጣ አረጋግጥ / Check draw</button></div>
+<div class="h" id="vo"></div>
+<label style="margin-top:14px">የምዝገባ ዝርዝር ለጥፍ / Paste the registry message</label>
+<textarea id="vr" style="min-height:90px"></textarea>
+<label>ስምህ / Your name</label><input type="text" id="q2">
+<div class="act"><button class="sec" id="vrgo">ስሜን አረጋግጥ / Check my name</button></div>
+<div class="h" id="vro"></div>
+</section>
+
+<section class="card">
+<h2>6. ማሳወቂያ / Telegram notifications</h2>
+<div class="h">ዕጣ፣ ምዝገባ እና የዕድል ሽያጭ ለግሩፑ በራስ ይላካል። ቁልፉ በዚህ ስልክ ላይ ብቻ ይቀመጣል / Results, registry and swaps are posted to the group automatically. The token stays on this phone only.</div>
+<label>Bot token (BotFather → API Token)</label><input type="password" id="tgt" autocomplete="off">
+<label>Group chat ID</label><input type="text" id="tgc" placeholder="-100…">
+<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="tgon" style="width:auto" checked> በራስ ላክ / Auto-post</label>
+<div class="h" style="margin-top:12px"><b>🔔 የማሳወቂያ ዓይነቶች ON / OFF / Notification types</b></div>
+<div class="h">✔ ሁልጊዜ የሚላኩ (ማጥፋት አይቻልም)፦ "ለግሩፑ ላክና ሰካ"፣ ሽክርክሪት ሲጀመር፣ ዕጣ ሲወጣ (ቪዲዮና ውጤት) / Always sent: posting the announcement, spin start, and the draw result (video + proof).</div>
+<label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="n_pick" style="width:auto" checked> ቁጥር ሲያዝ ወይም ሲለቀቅ / Number picked or released</label>
+<label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="n_pay" style="width:auto" checked> ክፍያ ሲረጋገጥ ወይም ሲሰረዝ / Payment confirmed or reverted</label>
+<label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="n_lock" style="width:auto" checked> ዕጣ ሲቆለፍ (ዝርዝርና Commitment) / Draw locked</label>
+<div class="h" style="margin:0 0 6px 26px">⚠️ ከጠፋ ቁልፉ (Commitment) ከዕጣው በፊት ለአባላት አይታወቅም፤ የፍትሃዊነት ማረጋገጫው ይቀንሳል / If OFF, members do not see the commitment before the draw, which weakens provable fairness.</div>
+<label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="n_judge" style="width:auto" checked> ዳኞች ኮድ ሲያስገቡ (ዳግም ማስጀመር / ተቃውሞ ማጽዳት) / Judges enter codes</label>
+<label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="n_reg" style="width:auto" checked> ምዝገባ ሲዘጋ (የአባላት ዝርዝር) / Registry posted</label>
+<label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="n_other" style="width:auto" checked> ሌሎች (ስም ማረጋገጫ፣ ክርክር፣ ዕድል መቀያየር፣ የደራሽ ክፍያ፣ አባላት ✅/❌) / Other</label>
+<div class="act"><button class="sec" id="tgfind">ቡድን ፈልግ / Find group</button><button class="sec" id="tgsave">አስቀምጥ / Save</button><button class="sec" id="tgtest">ሙከራ / Test</button></div>
+<div class="h" id="tgm"></div>
+<div class="act" style="margin-top:6px"><button class="sec" id="dlhtml">⬇️ HTML ፋይል አውርድ / Download HTML</button></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id),enc=new TextEncoder();
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+const sha=async s=>hex(await crypto.subtle.digest("SHA-256",enc.encode(s)));
+const esc=s=>String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const fmtN=n=>{const v=Number(n);return isFinite(v)?v.toLocaleString("en-US"):String(n??"")};
+const escA=s=>esc(s).replace(/"/g,"&quot;");
+(function(){const d=Object.getOwnPropertyDescriptor(Element.prototype,"innerHTML");
+["cl","hist","confadmin","ss","sb"].forEach(id=>{const el=document.getElementById(id);if(!el)return;let last=null;
+Object.defineProperty(el,"innerHTML",{get(){return d.get.call(this)},set(v){if(v===last)return;last=v;
+const pv=this.tagName==="SELECT"?this.value:null;d.set.call(this,v);
+if(pv!==null&&[...this.options].some(o=>o.value===pv))this.value=pv},configurable:true})})})();
+const _f=window.fetch.bind(window);
+window.fetch=(u,o={})=>{
+  if(!String(u).includes("api.telegram.org")||o.signal||/getUpdates/.test(u))return _f(u,o);
+  const c=new AbortController(),t=setTimeout(()=>c.abort(),(o.body instanceof FormData)?120000:20000);
+  return _f(u,{...o,signal:c.signal}).finally(()=>clearTimeout(t));
+};
+const parse=t=>t.split("\n").map(s=>s.trim()).filter(Boolean);
+const K="eqube2";let S={reg:null,fp:"",hist:[],swaps:[],amt:""};
+const _memStore={};
+const _getS=k=>{try{return localStorage.getItem(k)}catch(e){return _memStore[k]||null}};
+const _setS=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){_memStore[k]=v}};
+try{const rawS=_getS(K);if(rawS)S=JSON.parse(rawS)||S}catch(e){}
+const save=()=>{try{_setS(K,JSON.stringify(S))}catch(e){}};
+const pool=()=>{const w=new Set(S.hist.flatMap(h=>h.w));return S.reg.filter(n=>!w.has(n))};
+
+// Non-blocking message banner (no alert/confirm/prompt)
+function showMsg(msg){
+  const bar=$("uibar"),txt=$("uitxt");
+  if(!bar||!txt)return;
+  txt.textContent=String(msg||"");
+  bar.classList.remove("hidden");
+}
+$("uiclr").onclick=()=>$("uibar").classList.add("hidden");
+
+// Safe clipboard copy helper with fallback
+async function cp(t,b){
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(t);
+    }else{
+      const ta=document.createElement("textarea");
+      ta.value=t;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";
+      document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);
+    }
+    if(b){const o=b.textContent;b.textContent="✓";setTimeout(()=>b.textContent=o,1500)}
+  }catch(e){
+    showMsg("ቅጂ አልተሳካም / Copy failed");
+  }
+}
+
+function notifyApp(msg){
+  const bar=$("livebar"),txt=$("livetxt");
+  if(!bar||!txt)return;
+  txt.textContent=msg;
+  bar.classList.remove("hidden");
+}
+$("liveclr").onclick=()=>$("livebar").classList.add("hidden");
+
+// Compact multi-column Excel sheet for Telegram
+function tgMultiColExcel(title, cells, colsCount){
+  const cols = colsCount || (cells.length > 40 ? 3 : 2);
+  const rowsCount = Math.ceil(cells.length / cols);
+  const colWidths = Array.from({length: cols}, (_, c) => {
+    let w = 8;
+    for (let r = 0; r < rowsCount; r++) {
+      const idx = c * rowsCount + r;
+      if (idx < cells.length) w = Math.max(w, cells[idx].length);
+    }
+    return Math.min(20, w);
+  });
+  const fit = (s, w) => {
+    const str = String(s || "");
+    return str.length > w ? str.slice(0, w - 1) + "…" : str + " ".repeat(w - str.length);
+  };
+  const sep = "+" + colWidths.map(w => "-".repeat(w + 2)).join("+") + "+";
+  const gridRows = [];
+  for (let r = 0; r < rowsCount; r++) {
+    const rowCells = [];
+    for (let c = 0; c < cols; c++) {
+      const idx = c * rowsCount + r;
+      rowCells.push(" " + fit(idx < cells.length ? cells[idx] : "", colWidths[c]) + " ");
+    }
+    gridRows.push("|" + esc(rowCells.join("|")) + "|");
+  }
+  return [title, "<pre>", sep, ...gridRows, sep, "</pre>"].join("\n");
+}
+
+function lotSheetText(pre){
+  const l=S.lot||{};
+  const total=l.total||25;
+  const cs=S.claims||{};
+  const prizeLine=fmtN(l.prize)+" ብር"+(l.prizeWords?" ("+l.prizeWords+")":"");
+  const takenN=[],openN=[];let paidC=0,used=0,hid=0;
+  for(let n=1;n<=total;n++){
+    const c=cs[n];
+    if(c){
+      if(c.paid)paidC++;
+      let nm=String(c.rn||c.n||"---");if(nm.length>22)nm=nm.slice(0,21)+"…";
+      const ln="#"+n+"  "+nm+"  "+(c.paid?"💰✅":"✅");
+      if(used+ln.length<2300){takenN.push(ln);used+=ln.length+1}else hid++;
+    }else openN.push("#"+n);
+  }
+  const takenAll=takenN.length+hid;
+  if(hid)takenN.push("… +"+hid);
+  const sheet="<b>📊 የዕጣ ቁጥሮች (1–"+total+")</b>\n<b>✅ የተያዙ: "+takenAll+" · 💰 የተከፈሉ: "+paidC+" · ⬜ ክፍት: "+openN.length+"</b>\n<blockquote expandable>"+esc((takenN.length?takenN.join("\n")+"\n\n":"")+"⬜ ክፍት / Open: "+(openN.join(", ")||"---"))+"</blockquote>";
+  const payList=(l.pay||"-").split("\n").map(x=>"<b>• "+esc(x)+"</b>").join("\n\n");
+  const footer=S.reg
+    ?"<b>🔒 ምዝገባ ተዘግቷል / Registration is closed</b>"
+    :"<b>1__ ያልተያዙትን ቁጥሮች ምረጡ</b>\n\n<b>2__ ክፍያ በተቀመጠው ቴሌብር (የባንክ አካውንት)መክፈል</b>\n\n<b>3__ደረሰኝ (screenshot) ላኩ።</b>";
+  const lines=[
+    (pre?"<b>"+esc(pre.trim())+"</b>":""),
+    "<b>🎯 የዛሬ ዕድል / LUCK</b>",
+    "<b>💰 ዋጋ / Price: "+fmtN(l.price)+" ብር</b>",
+    "<b>🏆 ደራሽ / Prize: "+esc(prizeLine)+"</b>",
+    "<b>📅 የዕጣ ቀን / Draw date: "+esc(l.date||"-")+(l.time?" "+esc(l.time):"")+"</b>",
+    "<b>🎟 ቁጥሮች / Numbers: 1–"+total+" · ለአንድ ሰው / per person: "+(l.maxper>0?l.maxper:"ያልተገደበ / Unlimited")+"</b>",
+    "<b>💳 የክፍያ አማራጮች / Payment:</b>",
+    payList,
+    sheet,
+    footer
+  ].filter(Boolean);
+  return lines.join("\n\n");
+}
+
+async function editLotSheet(){
+  const c=cfg(),l=S.lot;
+  if(!c.t||!c.c||!l||!(l.msgs||[]).length)return;
+  const m0=l.msgs[0];
+  try{
+    await fetch("https://api.telegram.org/bot"+c.t+"/editMessageText",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        chat_id:c.c,
+        message_id:m0.id,
+        text:lotSheetText(),
+        parse_mode:"HTML",
+        reply_markup:lotKb(m0.a,m0.b)
+      })
+    });
+  }catch(e){}
+  for(let k=1;k<l.msgs.length;k++){
+    const mk=l.msgs[k];
+    await raw("editMessageReplyMarkup",{chat_id:c.c,message_id:mk.id,reply_markup:lotKb(mk.a,mk.b)});
+  }
+}
+
+async function pick(names,seed,count){
+  const lh=await sha(names.join("\n")),n=names.length,used=new Set(),out=[];
+  count=Math.min(count,n);
+  for(let i=0;out.length<count&&i<1e5;i++){
+    const h=new Uint8Array(await crypto.subtle.digest("SHA-256",enc.encode(seed+"|"+lh+"|"+i)));
+    let v=0n;for(let j=0;j<8;j++)v=(v<<8n)|BigInt(h[j]);
+    const x=Number(v%BigInt(n));if(!used.has(x)){used.add(x);out.push(names[x])}
+  }
+  return{lh,out};
+}
+
+function render(){
+  renderLot();
+  const r=S.reg;
+  $("regnew").classList.toggle("hidden",!!r);
+  ["regdone","confc","drawc","swapc"].forEach(i=>$(i).classList.toggle("hidden",!r));
+  if(!r){$("hist").innerHTML='<div class="h">ገና አሸናፊ የለም / No winners yet</div>';return}
+  const w=new Map();S.hist.forEach(h=>h.w.forEach(n=>w.set(n,h.r)));
+  $("rinfo").textContent=r.length+" አባላት / members · "+pool().length+" ብቁ / eligible";
+  $("rfp").textContent="Fingerprint: "+S.fp+(S.j?"\nJudges / ዳኞች: "+S.j.map(j=>j.n).join(" | "):"");
+  $("cl").innerHTML='<table class="xl"><thead><tr><th>#</th><th>አባል / Member</th><th>ሁኔታ / Status</th></tr></thead><tbody>'+
+    r.map((n,i)=>{
+      const won=w.has(n);
+      return '<tr><td>'+(i+1)+'</td><td>'+esc(n)+'</td><td>'+(won?'<span class="badge b-win">🏆 #'+w.get(n)+'</span>':'<span class="h" style="margin:0">○ ብቁ</span>')+'</td></tr>';
+    }).join("")+'</tbody></table>';
+  $("rno").textContent="#"+(S.hist.length+1);
+  $("pendb").classList.toggle("hidden",!(S.pend&&S.pend.length));
+  {const r=S.hist.length,v=S.ver&&S.ver[r],a=v?Object.keys(v.ok).length:0,b=v?Object.keys(v.no).length:0;$("vst").textContent=v?"ዕጣ #"+r+" ማረጋገጫ / verification: ✅ "+a+" · ❌ "+b+(b?"  — ተቃውሞ ተከፍቷል / objection open":a<(S.minv||1)?"  — ቢያንስ "+(S.minv||1)+" ያስፈልጋል / "+(S.minv||1)+" required":"")+rosterText(v).replace(/\n/g," | "):""}
+  renderConf();
+  $("pinfo").textContent=pool().length+" ተወዳዳሪዎች / in the draw";
+  $("hist").innerHTML=S.hist.map(h=>'<div class="r"><span><b>#'+h.r+"</b> "+esc(h.w.join(", "))+"</span><span>"+(h.a?h.a+" ብር · ":"")+h.t.slice(0,10)+"</span></div>").join("")+
+    S.swaps.map(s=>'<div class="r"><span>🔁 #'+s.r+": "+esc(s.from)+" → "+esc(s.to)+"</span><span>"+(s.p?s.p+" ብር · ":"")+s.t.slice(0,10)+"</span></div>").join("");
+  $("ss").innerHTML=S.hist.flatMap(h=>h.w.map(n=>'<option value="'+h.r+"|"+esc(n)+'">#'+h.r+" · "+esc(n)+"</option>")).join("");
+  $("sb").innerHTML=pool().map(n=>"<option>"+esc(n)+"</option>").join("");
+  if(!S.hist.length)$("hist").innerHTML='<div class="h">ገና አሸናፊ የለም / No winners yet</div>';
+}
+
+let pendingRegConfirm=false;
+$("reg").onclick=async()=>{
+  if(!needFor("reg"))return;
+  const n=parse($("names").value);
+  if(n.length<2)return showMsg("ቢያንስ 2 ስም / At least 2 names");
+  if(n.some(x=>x.includes("|")))return showMsg('"|" አይፈቀድም / not allowed in names');
+  const d=n.filter((x,i)=>n.indexOf(x)!==i);
+  if(d.length)return showMsg("የተደጋገመ ስም / Duplicate: "+[...new Set(d)].join(", "));
+  const J=[0,1,2].map(i=>({n:$("jn"+i).value.trim(),c:$("jc"+i).value}));
+  if(J.some(x=>!x.n||x.c.length<4))return showMsg("3 ዳኞች ስምና ቢያንስ 4 ፊደል/ቁጥር ያለው ኮድ ያስፈልጋሉ / 3 judges, each with a name and a code of 4+ characters");
+  if(new Set(J.map(x=>x.n)).size<3||new Set(J.map(x=>x.c)).size<3)return showMsg("ስሞችና ኮዶች የተለያዩ መሆን አለባቸው / Judge names and codes must all be different");
+  if(!pendingRegConfirm){
+    pendingRegConfirm=true;
+    showMsg("ከተመዘገበ በኋላ ማንም መቀየር አይችልም። ለማረጋገጥ 'መዝግብና ቆልፍ'ን እንደገና ይጫኑ።");
+    return;
+  }
+  pendingRegConfirm=false;
+  const j=[];for(const x of J){const s=hex(crypto.getRandomValues(new Uint8Array(8)));j.push({n:x.n,s,h:await sha(s+"|"+x.c)})}
+  S={reg:n,fp:await sha(n.join("\n")),hist:[],swaps:[],amt:"",j,lot:S.lot,claims:S.claims,pay:{},confReq:S.confReq};save();
+  [0,1,2].forEach(i=>{$("jn"+i).value="";$("jc"+i).value=""});S.pend=(nOn("reg")&&cfgOk())?[{tx:regPost()}]:[];save();render();flush().then(render);
+};
+
+const wipe=()=>{S={reg:null,fp:"",hist:[],swaps:[],amt:"",confReq:S.confReq};save();render()};
+let rmode="reset";
+let pendingWipeConfirm=false;
+$("rreset").onclick=()=>{
+  rmode="reset";
+  if(!S.j){
+    if(!pendingWipeConfirm){
+      pendingWipeConfirm=true;
+      showMsg("ዳኞች የሌሉት የድሮ ምዝገባ ይሰረዛል። ለማረጋገጥ 'ዳግም አስጀምር'ን እንደገና ይጫኑ።");
+      return;
+    }
+    pendingWipeConfirm=false;wipe();return;
+  }
+  $("rj").innerHTML=S.j.map((j,i)=>'<label>'+esc(j.n)+'</label><input type="password" id="rc'+i+'" placeholder="ኮድ / Code">').join("");
+  $("rpanel").classList.remove("hidden");
+};
+$("rno2").onclick=()=>{$("rpanel").classList.add("hidden");pendingWipeConfirm=false;};
+$("rgo").onclick=async()=>{
+  for(let i=0;i<S.j.length;i++){const j=S.j[i];if(await sha(j.s+"|"+$("rc"+i).value)!==j.h)return showMsg("ኮድ ትክክል አይደለም / Wrong code: "+j.n)}
+  if(rmode==="obj"){
+    const r=S.hist.length,v=S.ver&&S.ver[r];if(!v)return;
+    if(!needFor("judge"))return;
+    if(!await tgx("judge","🔄 ተቃውሞ ተጠርጓል / Objection on draw #"+r+" cleared by the judges\nJudges: "+S.j.map(j=>j.n).join(" | ")+"\nObjected by: "+(Object.values(v.no).map(x=>x.n).join(", ")||"-")+"\nVerified by: "+(Object.values(v.ok).map(x=>x.n).join(", ")||"-"))){showMsg("ሪፖርቱ አልተላከም / Report not delivered");return}
+    v.no={};v.cl=(v.cl||0)+1;save();$("rpanel").classList.add("hidden");render();await editVer(r);return;
+  }
+  if(!pendingWipeConfirm){
+    pendingWipeConfirm=true;
+    showMsg("ሦስቱም ዳኞች ተረጋግጠዋል። ሁሉም ይጠፋል፤ ለማረጋገጥ 'አስጀምር'ን እንደገና ይጫኑ።");
+    return;
+  }
+  pendingWipeConfirm=false;
+  if(!needFor("judge"))return;
+  if(!await tgx("judge","⚠️ ዳግም ማስጀመር / RESET\nRounds: "+S.hist.length+" · Spins: "+(S.spins||0)+"\nJudges: "+S.j.map(j=>j.n).join(" | ")+"\nሦስቱም ዳኞች ኮዳቸውን አስገብተዋል / All 3 judges entered their codes")){showMsg("ሪፖርቱ አልተላከም፤ ዳግም ማስጀመር አልተፈቀደም / Report not delivered; reset not allowed");return}
+  $("rpanel").classList.add("hidden");wipe();
+};
+
+$("rcopy").onclick=()=>cp("ዕቁቤ ምዝገባ / Eqube registry\nMembers: "+S.reg.length+"\nFingerprint: "+S.fp+(S.j?"\nJudges: "+S.j.map(j=>j.n).join(" | "):"")+"\n"+S.reg.map((n,i)=>(i+1)+". "+n).join("\n"),$("rcopy"));
+$("hcopy").onclick=()=>cp("ዕቁቤ አሸናፊዎች / Eqube winners\n"+S.hist.map(h=>"#"+h.r+" "+h.w.join(", ")+(h.a?" · "+h.a+" ብር":"")+" · "+h.t.slice(0,10)).join("\n")+(S.swaps.length?"\nSwaps:\n"+S.swaps.map(s=>"#"+s.r+" "+s.from+" → "+s.to+(s.p?" · "+s.p+" ብር":"")).join("\n"):""),$("hcopy"));
+
+$("sgo").onclick=async()=>{
+  const[r,from]=$("ss").value.split("|"),to=$("sb").value;
+  if(!r||!to)return showMsg("ሻጭና ገዢ ምረጥ / Choose seller and buyer");
+  if(!needFor("other"))return;
+  const pr=$("sp").value.trim();
+  if(!await tgx("other","🔁 ዕድል ተቀየረ / Win swapped\n#"+r+": "+from+" → "+to+(pr?"\n"+pr+" ብር / ETB":"")+"\nየቀሩ / Remaining: "+pool().length))return showMsg("ሪፖርቱ ለግሩፑ አልተላከም፤ ለውጡ አልተፈቀደም / Report not delivered; swap not applied");
+  const h=S.hist.find(h=>h.r==r);h.w[h.w.indexOf(from)]=to;
+  S.swaps.push({r:+r,from,to,p:pr,t:new Date().toISOString()});save();$("sp").value="";render();
+};
+
+const TK="eqube_tg";
+const cfg=()=>{try{const rawT=_getS(TK);return rawT?JSON.parse(rawT):{}}catch(e){return{}}};
+const tgmsg=t=>{$("tgm").textContent=t};
+function nOn(k){try{return (cfg().n||{})[k]!==false}catch(e){return true}}
+async function tgx(k,text){return nOn(k)?await tg(text):true}
+function needFor(k){return nOn(k)?need():true}
+const chunk=t=>{
+  const o=[];let c="",inPre=false;
+  for(const l of t.split("\n")){
+    if(/<pre[\s>]/i.test(l))inPre=true;
+    if(!inPre&&(c+l).length>3800){o.push(c);c=""}
+    c+=l+"\n";
+    if(/<\/pre>/i.test(l))inPre=false;
+  }
+  if(c.trim())o.push(c);return o;
+};
+const fmt0=t=>{
+  if(/<(pre|b|code|blockquote)[\s>]/i.test(t))return t;
+  return t.split("\n").map(l=>{const e=esc(l);return /^(Public word:|ይፋ ቃል)/.test(l)?"<b><u>"+e+"</u></b>":e}).join("\n");
+};
+const st=t=>{$("dst").textContent=t};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const cfgOk=()=>{const c=cfg();return !!(c.t&&c.c&&c.on!==false)};
+const PEND="ያልተላከ ሪፖርት አለ፤ መጀመሪያ ላክ / A report is still waiting; send it first";
+function need(){if(cfgOk())return true;const m="⚠️ '6. ማሳወቂያ' (Bot token & Group chat ID) መጀመሪያ መሞላት አለበት / Set up section 6 first";if($("lotmsg"))$("lotmsg").textContent=m;showMsg(m);return false}
+async function api(method,body,isForm){
+  const c=cfg();
+  for(let k=0;k<4;k++){
+    try{
+      const r=await fetch("https://api.telegram.org/bot"+c.t+"/"+method,isForm?{method:"POST",body}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+      const j=await r.json();
+      if(j.ok)return j;
+      const w=j.parameters&&j.parameters.retry_after;
+      if(w&&k<3){tgmsg("⏳ "+w+"s");await sleep((w+1)*1000);continue}
+      tgmsg("❌ "+(j.description||"error"));return null;
+    }catch(e){tgmsg("❌ ኢንተርኔት / Network error");if(k<3)await sleep(1000)}
+  }
+  return null;
+}
+async function tgVideo(b,cap){
+  const c=cfg();
+  if(!b||!b.size){tgmsg("❌ Video: empty recording");return false}
+  for(const[m,fld] of[["sendVideo","video"],["sendDocument","document"]]){
+    const f=new FormData();f.append("chat_id",c.c);f.append("caption",cap);
+    if(m==="sendVideo")f.append("supports_streaming","true");
+    f.append(fld,b,"spin.mp4");
+    if(await api(m,f,true))return true;
+    tgmsg($("tgm").textContent+" · "+Math.round(b.size/1024)+" KB");
+  }
+  return false;
+}
+const fmt=t=>{const i=t.indexOf("\n§§\n");return i<0?fmt0(t):fmt0(t.slice(0,i))+"\n<blockquote expandable>"+esc(t.slice(i+4).trim())+"</blockquote>"};
+const tgLock=()=>tgx("lock","🔒 ዕጣ #"+(S.hist.length+1)+" ተቆልፏል / locked (#"+S.locks+")\nPool: "+pool().length+" · Winners: "+lock.c+"\nይፋ ቃል ወይም ቁጥር ላኩ / Send a public word or number.\n§§\nFingerprint: "+lock.lh+"\nCommitment: "+lock.commit);
+let LASTMID=0;
+
+// #5: Prevent duplicate identical Telegram notifications within 5 seconds
+const _tgRecent=new Map();
+async function tg(text,manual,kb){
+  const c=cfg();
+  if(!c.t||!c.c||(!manual&&c.on===false)){if(manual)tgmsg("ማሳወቂያ አልተዋቀረም / Notifications not set up");return false}
+  const now=Date.now();
+  const key=String(c.c)+"|"+(kb?JSON.stringify(kb)+"|":"")+String(text).trim();
+  const prev=_tgRecent.get(key);
+  if(prev && (now-prev)<5000){
+    const rem=Math.ceil((5000-(now-prev))/1000);
+    tgmsg("⏳ ተመሳሳይ መልእክት በ5 ሰከንድ ውስጥ ስለታዘዘ አልተደገመም ("+rem+"s)");
+    return true;
+  }
+  _tgRecent.set(key,now);
+  for(const [k,ts] of _tgRecent.entries()){if(now-ts>15000)_tgRecent.delete(k);}
+  const i0=text.indexOf("\n§§\n");
+  for(const p of (i0<0||text.length<3800)?chunk(text):[...chunk(text.slice(0,i0)),...chunk(text.slice(i0+4)).map(x=>"\n§§\n"+x)]){
+    const jm=await api("sendMessage",{chat_id:c.c,text:fmt(p),parse_mode:"HTML",...(kb?{reply_markup:kb}:{})});
+    if(!jm){_tgRecent.delete(key);return false;}
+    LASTMID=jm.result.message_id;
+  }
+  tgmsg("✅ ለግሩፑ ተልኳል / Sent to the group");return true;
+}
+
+async function flush(){
+  while(S.pend&&S.pend.length){
+    const it=S.pend[0];
+    const tx=it.tx||(it.h+(it.v?"":"\n⚠️ ቪዲዮ አልተላከም / Spin video not delivered")+"\n§§\n"+it.tl);
+    if(!await tg(tx,false,it.r?verKb(it.r,0,0):undefined))return false;
+    if(it.r){S.ver=S.ver||{};S.ver[it.r]={mid:LASTMID,ok:{},no:{},h:it.h+(it.v?"":"\n⚠️ ቪዲዮ አልተላከም / Spin video not delivered"),tl:it.tl}}
+    S.pend.shift();save();
+  }
+  return true;
+}
+$("pendgo").onclick=async()=>{await flush();render()};
+const N_KEYS=["pick","pay","lock","judge","reg","other"];
+const readN=()=>{const n={};N_KEYS.forEach(k=>{const e=$("n_"+k);n[k]=e?e.checked:true});return n};
+const tgSave=()=>{try{_setS(TK,JSON.stringify({t:$("tgt").value.trim(),c:$("tgc").value.trim(),on:$("tgon").checked,n:readN()}))}catch(e){}tgmsg("✅ ተቀምጧል / Saved")};
+N_KEYS.forEach(k=>{const e=$("n_"+k);if(e)e.onchange=tgSave});
+$("tgsave").onclick=tgSave;
+$("tgtest").onclick=()=>{tgSave();tg("✅ ዕቁቤ ተገናኝቷል / Eqube connected",true)};
+$("tgfind").onclick=async()=>{
+  const t=$("tgt").value.trim();if(!t){tgmsg("Token ጻፍ / Enter the token first");return}
+  try{
+    const j=await(await fetch("https://api.telegram.org/bot"+t+"/getUpdates")).json();
+    if(!j.ok){tgmsg("❌ "+(j.description||"error"));return}
+    const g=j.result.map(u=>(u.message||u.my_chat_member||u.channel_post||{}).chat).filter(c=>c&&c.type!=="private");
+    if(!g.length){tgmsg("በግሩፑ ውስጥ /start@የቦትህስም ጻፍና እንደገና ሞክር / Send /start@yourbot in the group, then try again");return}
+    const c=g[g.length-1];$("tgc").value=c.id;tgmsg("✅ "+(c.title||"")+" ("+c.id+") · አስቀምጥ ተጫን / press Save");
+  }catch(e){tgmsg("❌ ኢንተርኔት / Network error")}
+};
+const regExcel=()=>tgMultiColExcel("<b>📋 የተመዘገቡ አባላት / Registered Members ("+S.reg.length+")</b>",S.reg.map((n,i)=>String(i+1).padStart(2,"0")+". "+n),S.reg.length>30?3:2);
+const regPost=()=>"<b>📋 ዕቁቤ ምዝገባ / Eqube registry</b>\nMembers: "+S.reg.length+(S.j?"\nJudges: "+esc(S.j.map(j=>j.n).join(" | ")):"")+"\n"+regExcel()+"\n§§\nFingerprint: "+S.fp;
+const stat=()=>{const w=new Map();S.hist.forEach(h=>h.w.forEach(n=>w.set(n,h.r)));const cells=S.reg.map((n,i)=>String(i+1).padStart(2,"0")+(w.has(n)?"🏆#"+w.get(n)+" ":" ")+n);return "<b>📋 የዕቁቤ ሁኔታ / Eqube status</b>\nአሸናፊዎች / Winners: "+S.hist.length+" · የቀሩ / Remaining: "+pool().length+"\n"+tgMultiColExcel("<b>📊 የአባላት ሰንጠረዥ / Members Sheet</b>",cells,S.reg.length>30?3:2)};
+$("hpost").onclick=async()=>{if(!await tg(stat(),true))cp(stat(),$("hpost"))};
+
+const wonSet=()=>new Set(S.hist.flatMap(h=>h.w));
+const wonMap=()=>{const m=new Map();S.hist.forEach(h=>h.w.forEach(n=>m.set(n,h.r)));return m};
+function confKb(){
+  const cf=S.conf,b=S.reg.map((n,i)=>({text:(cf.dis[i]?"⚠️":cf.items[i]?"✅":"")+(i+1),callback_data:"c:"+i})),rows=[];
+  for(let i=0;i<b.length;i+=6)rows.push(b.slice(i,i+6));
+  return rows;
+}
+function confText(){
+  const cf=S.conf,w=wonSet();
+  const cells=S.reg.map((n,i)=>{
+    const stIcon=w.has(n)?"🏆":cf.dis[i]?"⚠️":cf.items[i]?"✅":"⬜";
+    return String(i+1).padStart(2,"0")+stIcon+n;
+  });
+  const need=S.reg.filter(n=>!w.has(n)).length,ok=S.reg.filter((n,i)=>!w.has(n)&&cf.items[i]&&!cf.dis[i]).length;
+  return "<b>📝 ስም ማረጋገጫ / Name confirmation</b>\nእያንዳንዱ አባል የራሱን ቁጥር ከታች ይጫን / Tap your number below ("+ok+"/"+need+" ✅)\n"+tgMultiColExcel("<b>📊 የአባላት ማረጋገጫ ሰንጠረዥ</b>",cells,S.reg.length>30?3:2);
+}
+
+// #1 & #2: Organizer confirmation display + ON/OFF requirement toggle
+function renderConf(){
+  const el=$("cst");if(!S.reg)return;
+  if($("confreq"))$("confreq").checked=isConfRequired();
+  const cf=S.conf||{mid:0,items:{},dis:{}};
+  const w=wonMap(),miss=[],dis=[];let need=0;
+  S.reg.forEach((n,i)=>{if(w.has(n))return;need++;if(cf.dis[i])dis.push(i+1);else if(!cf.items[i])miss.push(i+1)});
+  const reqText=isConfRequired()?"ግዴታ: ON":"ግዴታ: OFF (ሳያረጋግጡ ዕጣ መውጣት ይቻላል)";
+  if(!S.conf){
+    el.textContent="ገና አልተጀመረም / Not started · "+reqText;
+  }else{
+    el.textContent="✅ "+(need-miss.length-dis.length)+"/"+need+" · "+reqText+(miss.length?"\nያልተረጋገጡ / Missing: #"+miss.join(", #"):"")+(dis.length?"\n⚠️ ክርክር / Disputed: #"+dis.join(", #"):"");
+  }
+  const box=$("confadmin");
+  if(box){
+    const rowsHtml=S.reg.map((n,i)=>{
+      const it=cf.items&&cf.items[i];
+      const isDis=cf.dis&&cf.dis[i];
+      const byText=w.has(n)
+        ?'<span class="badge b-win">🏆 አሸናፊ (#'+w.get(n)+')</span>'
+        :isDis
+          ?'<span class="badge b-wait">⚠️ ክርክር</span>'
+          :it
+            ?'<span class="badge b-ok">✅ '+(it.byOrg?'በአዘጋጅ ተረጋግጧል (Organizer)':esc(it.n)+' (በራሱ)')+'</span>'
+            :'<span class="h" style="margin:0">⬜ አልተረጋገጠም</span>';
+      const btnLabel=it?"↩️ ሰርዝ":"✓ አረጋግጥ";
+      return '<tr><td><b>#'+(i+1)+'</b></td><td><b>'+esc(n)+'</b></td><td>'+byText+'</td><td><button class="sec" style="padding:4px 9px;font-size:.8rem" data-cidx="'+i+'">'+btnLabel+'</button></td></tr>';
+    }).join("");
+    box.innerHTML='<div class="xl-wrap"><table class="xl"><thead><tr><th>#</th><th>የአባል ስም</th><th>ያረጋገጠው / ሁኔታ</th><th>እርምጃ</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
+  }
+}
+
+if($("confreq")){
+  $("confreq").onchange=()=>{
+    S.confReq=$("confreq").checked;
+    save();
+    renderConf();
+  };
+}
+
+if($("confadmin")){
+  $("confadmin").onclick=async e=>{
+    const btn=e.target&&e.target.closest&&e.target.closest("button[data-cidx]");
+    if(!btn||!S.reg)return;
+    const idx=+btn.dataset.cidx;
+    S.conf=S.conf||{mid:0,items:{},dis:{}};
+    const cf=S.conf;
+    if(cf.items[idx]){
+      delete cf.items[idx];
+      if(cf.dis)delete cf.dis[idx];
+      save();renderConf();
+      if(cf.mid)await editConf();
+    }else{
+      const orgLabel="በአዘጋጅ ተረጋግጧል (Organizer)";
+      cf.items[idx]={u:"org",n:orgLabel,byOrg:true,t:new Date().toISOString()};
+      if(cf.dis)delete cf.dis[idx];
+      save();renderConf();
+      if(cf.mid)await editConf();
+      if(cfgOk())await tgx("other","✅ በአዘጋጅ ተረጋግጧል (Organizer): #"+(idx+1)+" "+S.reg[idx]);
+    }
+  };
+}
+
+async function editConf(){
+  const c=cfg();if(!S.conf||!S.conf.mid)return;
+  try{await fetch("https://api.telegram.org/bot"+c.t+"/editMessageText",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:c.c,message_id:S.conf.mid,text:confText(),parse_mode:"HTML",reply_markup:{inline_keyboard:confKb()}})})}catch(e){}
+}
+const verKb=(r,a,b)=>({inline_keyboard:[[{text:"✅ ትክክል ነው / Verified ("+a+")",callback_data:"v:"+r},{text:"❌ ተቃውሞ / Object ("+b+")",callback_data:"x:"+r}]]});
+const raw=async(m,b)=>{const c=cfg();try{return await(await fetch("https://api.telegram.org/bot"+c.t+"/"+m,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)})).json()}catch(e){return{ok:false}}};
+const memberOf=uid=>{
+  const idx=new Set(),it=S.conf&&S.conf.items,cl=S.claims;
+  if(it)Object.keys(it).forEach(k=>{if(it[k].u===uid)idx.add(+k)});
+  if(cl&&S.reg)Object.keys(cl).forEach(n=>{if(cl[n].u===uid&&cl[n].paid){const i=S.reg.findIndex(x=>x.endsWith("(#"+n+")"));if(i>=0)idx.add(i)}});
+  if(idx.size!==1)return"";
+  const i=[...idx][0],m=S.reg[i].match(/^(.*) \(#(\d+)\)$/);return m?"#"+m[2]+" "+m[1]:"#"+(i+1)+" "+S.reg[i];
+};
+const rosterText=v=>{if(!v)return"";const l=o=>Object.values(o).map(x=>x.n+(x.m?" ("+x.m+")":"")).join(", ");const a=Object.keys(v.ok).length,b=Object.keys(v.no).length;return(a?"\n✅ አረጋግጠዋል / Verified ("+a+"): "+l(v.ok):"")+(b?"\n❌ ተቃውመዋል / Objected ("+b+"): "+l(v.no):"")};
+async function editVer(r){
+  const c=cfg(),v=S.ver&&S.ver[r];if(!v)return;
+  const kb=verKb(r,Object.keys(v.ok).length,Object.keys(v.no).length);
+  const txt=v.h?v.h+rosterText(v)+"\n§§\n"+v.tl:"";
+  let j={ok:false};
+  if(txt&&txt.length<3800)j=await raw("editMessageText",{chat_id:c.c,message_id:v.mid,text:fmt(txt),parse_mode:"HTML",reply_markup:kb});
+  if(!j.ok&&!/not modified/.test(j.description||""))await raw("editMessageReplyMarkup",{chat_id:c.c,message_id:v.mid,reply_markup:kb});
+}
+const ansQ=(c,q,t,al)=>fetch("https://api.telegram.org/bot"+c.t+"/answerCallbackQuery",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({callback_query_id:q.id,text:t,show_alert:!!al})}).catch(()=>{});
+let ctl=null,chain=Promise.resolve();
+const locked=f=>{const r=chain.then(f,f);chain=r.catch(()=>{});return r};
+
+async function doPoll(t){
+  const c=cfg();if(!c.t||!c.c||!(S.conf||S.ver||(S.lot&&(S.lot.msgs||[]).length)))return;
+  ctl=new AbortController();
+  const tmo=setTimeout(()=>{try{ctl&&ctl.abort()}catch(e){}},t*1000+15000);
+  let res=true,touched=false;
+  try{
+    const j=await(await fetch("https://api.telegram.org/bot"+c.t+"/getUpdates",{method:"POST",headers:{"Content-Type":"application/json"},signal:ctl.signal,body:JSON.stringify({offset:S.off||0,timeout:t,allowed_updates:["callback_query"]})})).json();
+    if(j.ok){
+      let ch=false,kc=false;const vr=new Set();
+      for(const u of j.result){
+        S.off=u.update_id+1;
+        const q=u.callback_query;if(!q||!q.data||!q.message||String(q.message.chat.id)!==String(c.c))continue;
+        touched=true;const f=q.from,who=(f.username?"@"+f.username:((f.first_name||"")+" "+(f.last_name||"")).trim()),mn=memberOf(f.id),wm=who+(mn?" ("+mn+")":"");
+        const mt=q.data.match(/^t:(\d+)$/);
+        if(mt){
+          const n=+mt[1],l=S.lot;
+          if(!l||!(l.msgs||[]).some(m=>m.id===q.message.message_id)||n<1||n>l.total)continue;
+          S.claims=S.claims||{};
+          const cl=S.claims[n],mine=Object.keys(S.claims).filter(k=>S.claims[k].u===f.id);
+          let ans,al=false,msg="";
+          if(S.reg){ans="🔒 ምዝገባ ተዘግቷል / registration is closed";al=true}
+          else if(cl&&cl.u===f.id){
+            // #4: Prevent accidental release within 5 seconds of picking
+            const pickedAt=cl.ts||(cl.t?Date.parse(cl.t):0);
+            const elapsed=Date.now()-pickedAt;
+            if(cl.paid){ans="✅ ክፍያዎ ተረጋግጧል፤ መልቀቅ አይቻልም / paid; cannot release";al=true}
+            else if(pickedAt && elapsed<5000){
+              const waitSec=Math.ceil((5000-elapsed)/1000);
+              ans="✅ #"+n+" ተመርጧል! በስህተት እንዳይለቀቅ ለ"+waitSec+"s ተቆልፏል";
+              al=false;
+            }
+            else{
+              delete S.claims[n];
+              ans="↩️ #"+n+" ተለቋል / released";kc=true;
+              msg="↩️ "+who+" #"+n+" ለቀዋል / released number "+n;
+              notifyApp("↩️ "+who+" ቁጥር #"+n+" ለቀዋል");
+            }
+          }
+          else if(cl){ans="❌ #"+n+" ተይዟል / already taken";al=true}
+          else if((l.maxper||0)>0&&mine.length>=l.maxper){ans="❌ ቀድሞ ቁጥር መርጠዋል (#"+mine.join(", #")+") / limit reached";al=true}
+          else{
+            const nowMs=Date.now();
+            const nowStr=new Date(nowMs).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+            S.claims[n]={u:f.id,n:who,t:new Date(nowMs).toISOString(),ts:nowMs,tm:nowStr,paid:false,rn:""};
+            ans="✅ #"+n+" ተመርጧል! · ደረሰኝ ይላኩ";
+            kc=true;
+            msg="✅ "+who+" ቁጥር #"+n+" መርጠዋል / picked number "+n;
+            notifyApp("✅ "+who+" ቁጥር #"+n+" መርጠዋል ("+nowStr+")");
+          }
+          ansQ(c,q,ans,al);
+          if(msg){try{await tgx("pick",msg)}catch(e){}}
+          try{renderLot()}catch(e){}
+          if(kc){try{await lotRefreshKb();await editLotSheet()}catch(e){}}
+          continue;
+        }
+        const mv=q.data.match(/^([vx]):(\d+)$/);
+        if(mv){
+          const r=+mv[2],v=S.ver&&S.ver[r];
+          if(!v||q.message.message_id!==v.mid)continue;
+          const wi=((S.hist.find(h=>h.r===r)||{w:[]}).w).map(n=>S.reg.indexOf(n));
+          let ans,al=false,msg="";
+          if(wi.some(i=>S.conf&&S.conf.items[i]&&S.conf.items[i].u===f.id)){ans="❌ አሸናፊው ራሱ ማረጋገጥም መቃወምም አይችልም / The winner cannot verify or object";al=true}
+          else if(mv[1]==="v"){
+            if(v.ok[f.id])ans="✅ ቀድሞ አረጋግጠዋል / already verified";
+            else{v.ok[f.id]={n:who,m:mn,t:new Date().toISOString()};delete v.no[f.id];ans="✅ አመሰግናለሁ / thank you";vr.add(r);msg="✅ "+wm+" ዕጣ #"+r+" ትክክለኛ መሆኑን አረጋግጠዋል / verified draw #"+r}
+          }else{
+            if(v.no[f.id])ans="❌ ተቃውሞዎ ተመዝግቧል / already recorded";
+            else{v.no[f.id]={n:who,m:mn,t:new Date().toISOString()};delete v.ok[f.id];ans="❌ ተቃውሞ ተመዝግቧል / objection recorded";vr.add(r);msg="❌ "+wm+" ዕጣ #"+r+" ላይ ተቃውመዋል / objected to draw #"+r}
+          }
+          ansQ(c,q,ans,al);if(msg){try{await tgx("other",msg)}catch(e){}}continue;
+        }
+        if(!S.conf||q.message.message_id!==S.conf.mid)continue;
+        const m=q.data.match(/^c:(\d+)$/);if(!m)continue;
+        const i=+m[1],cf=S.conf,cur=cf.items[i];
+        let ans,alertIt=false;
+        if(i>=S.reg.length)continue;
+        if(!cur&&Object.values(cf.items).some(x=>x.u===f.id)){ans="❌ አንድ ሰው አንድ ስም ብቻ / one name per person";alertIt=true}
+        else if(!cur){cf.items[i]={u:f.id,n:who,byOrg:false,t:new Date().toISOString()};ans="✅ #"+(i+1)+" ተረጋግጧል / confirmed";ch=true;notifyApp("✅ "+who+" ስም #"+(i+1)+" ("+S.reg[i]+") አረጋግጠዋል")}
+        else if(cur.u===f.id)ans="✅ ቀድሞ ተረጋግጧል / already confirmed";
+        else{cf.dis[i]=true;ans="⚠️ ይህ ቁጥር በሌላ ሰው ተረጋግጧል፤ ለአዘጋጁ ንገሩ / Already confirmed by someone else; tell the organizer";alertIt=true;ch=true}
+        ansQ(c,q,ans,alertIt);
+      }
+      save();
+      if(ch)await editConf();
+      for(const r of vr)await editVer(r);
+    }else res=false;
+  }catch(e){res=!!(e&&e.name==="AbortError")}
+  clearTimeout(tmo);ctl=null;if(touched){renderConf();render()}
+  return res;
+}
+
+const pollRun=t=>locked(()=>doPoll(t));
+let lastPoll=0;
+async function pollConf(force){if(!force&&Date.now()-lastPoll<3000)return;if(ctl)ctl.abort();const r=await pollRun(0);lastPoll=Date.now();return r}
+async function pollLoop(){
+  let fails=0;
+  while(true){
+    let w=document.hidden?2500:1000;
+    try{
+      if((S.conf||S.ver||(S.lot&&(S.lot.msgs||[]).length))&&cfgOk()&&!document.hidden){
+        const ok=await pollRun(12);
+        if(ok===false){fails++;w=Math.min(20000,fails*3000)}else{fails=0;w=250}
+      }
+    }catch(e){}
+    await sleep(w);
+  }
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)pollConf()});
+
+async function verGate(){
+  const r=S.hist.length,v=S.ver&&S.ver[r];
+  if(!r||!v)return true;
+  await pollConf();
+  const a=Object.keys(v.ok).length,b=Object.keys(v.no).length,mn=S.minv||1;
+  if(b){showMsg("ዕጣ #"+r+" ላይ ተቃውሞ አለ ❌ ("+b+")፤ ዳኞች እስኪያጸዱ አይቀጥልም / An objection is open; the judges must clear it first");return false}
+  if(a<mn){showMsg("ዕጣ #"+r+" በአባላት መረጋገጥ አለበት፤ ቢያንስ "+mn+" አባል ✅ መጫን አለበት (አሁን "+a+") / At least "+mn+" member must verify draw #"+r+" (now "+a+")");return false}
+  return true;
+}
+
+$("vclr").onclick=()=>{
+  const r=S.hist.length,v=S.ver&&S.ver[r];
+  if(!v||!Object.keys(v.no).length)return showMsg("ክፍት ተቃውሞ የለም / No open objection");
+  if(!S.j)return showMsg("ዳኞች የሉም / No judges registered");
+  rmode="obj";
+  $("rj").innerHTML=S.j.map((j,i)=>'<label>'+esc(j.n)+'</label><input type="password" id="rc'+i+'" placeholder="ኮድ / Code">').join("");
+  $("rpanel").classList.remove("hidden");$("rpanel").scrollIntoView();
+};
+
+function isConfRequired(){
+  return !(S && S.confReq === false);
+}
+
+let pendingUnconfProceed=false;
+async function confGate(){
+  if(!isConfRequired())return true;
+  if(!S.conf){showMsg("መጀመሪያ 'ማረጋገጫ ጀምር'ን ተጫን፤ ወይም ከላይ ስም ማረጋገጥን OFF አድርግ / Start name confirmation first, or switch requirement OFF");return false}
+  await pollConf();
+  const cf=S.conf,w=wonSet(),miss=[],dis=[];
+  S.reg.forEach((n,i)=>{if(w.has(n))return;if(cf.dis[i])dis.push(i+1);else if(!cf.items[i])miss.push(i+1)});
+  if(dis.length){showMsg("ክርክር አለ ⚠️ #"+dis.join(", #")+"፤ መጀመሪያ 'ክርክር አጽዳ'ን ተጠቀም / Resolve the disputed numbers first");return false}
+  if(!miss.length){pendingUnconfProceed=false;return true;}
+  if(!pendingUnconfProceed){
+    pendingUnconfProceed=true;
+    showMsg(miss.length+" አባላት አላረጋገጡም (#"+miss.join(", #")+")። ያለእነሱ ለመቀጠል ቁልፉን እንደገና ይጫኑ (ለግሩፑ ይገለጻል)።");
+    return false;
+  }
+  pendingUnconfProceed=false;
+  return await tgx("other","⚠️ ያለ ማረጋገጫ ይቀጥላል / Proceeding without confirmation\n"+miss.length+" unconfirmed: #"+miss.join(", #"));
+}
+
+let pendingConfRestart=false;
+$("cstart").onclick=async()=>{
+  if(!need())return;
+  if(S.conf && !pendingConfRestart){
+    pendingConfRestart=true;
+    showMsg("የቀድሞው ማረጋገጫ ይጠፋል። ለማረጋገጥ 'ማረጋገጫ ጀምር'ን እንደገና ይጫኑ።");
+    return;
+  }
+  pendingConfRestart=false;
+  if(S.reg.length>100)return showMsg("ከ100 ስሞች በላይ አይደገፍም / More than 100 names are not supported");
+  const c=cfg(),old=S.conf;S.conf={mid:0,items:{},dis:{}};
+  const j=await api("sendMessage",{chat_id:c.c,text:confText(),parse_mode:"HTML",reply_markup:{inline_keyboard:confKb()}});
+  if(!j){S.conf=old;showMsg("ማረጋገጫው ለግሩፑ አልተላከም / The confirmation message was not delivered");return}
+  S.conf.mid=j.result.message_id;save();renderConf();
+};
+
+$("cref").onclick=async()=>{await pollConf(true);renderConf()};
+$("crem").onclick=async()=>{
+  if(!S.conf)return showMsg("ገና አልተጀመረም / Not started");
+  const w=wonSet(),miss=S.reg.map((n,i)=>i).filter(i=>!w.has(S.reg[i])&&!S.conf.items[i]).map(i=>i+1);
+  if(!miss.length)return showMsg("ሁሉም አረጋግጠዋል ✅ / Everyone has confirmed");
+  tg("⏰ ስማቸውን ያላረጋገጡ ቁጥሮች / Not yet confirmed: #"+miss.join(", #")+"\nከላይ ባለው የማረጋገጫ መልእክት ላይ ቁጥራችሁን ጫኑ / Please tap your number on the confirmation message above",true);
+};
+$("cclr").onclick=async()=>{
+  const cf=S.conf;if(!cf)return;const d=Object.keys(cf.dis);
+  if(!d.length)return showMsg("ክርክር የለም / No disputes");
+  if(!needFor("other"))return;
+  if(!await tgx("other","🔄 ክርክር ተጠርጓል / Disputes cleared\n#"+d.map(i=>+i+1).join(", #")+" — ባለቤቶቹ እንደገና ይጫኑ / owners please tap again"))return;
+  d.forEach(i=>{delete cf.dis[i];delete cf.items[i]});save();await editConf();renderConf();
+};
+const lotKb=(a,b)=>{
+  const rows=[];let row=[];
+  for(let n=a;n<=b;n++){
+    const c=S.claims&&S.claims[n];
+    const mark=c?(c.paid?"💰✅":"✅"):"";
+    row.push({text:mark+n,callback_data:"t:"+n});
+    if(row.length===6){rows.push(row);row=[]}
+  }
+  if(row.length)rows.push(row);
+  return{inline_keyboard:rows};
+};
+async function lotRefreshKb(){const c=cfg();if(!c.t||!c.c)return;for(const m of (S.lot&&S.lot.msgs)||[])await raw("editMessageReplyMarkup",{chat_id:c.c,message_id:m.id,reply_markup:lotKb(m.a,m.b)})}
+function lotRead(){
+  const l=S.lot||{};
+  S.lot={
+    ...l,
+    price:+$("lotprice").value||0,
+    prize:+$("lotprize").value||0,
+    prizeWords:$("lotprizewords").value.trim(),
+    date:$("lotdate").value,
+    time:$("lottime").value,
+    total:Math.min(200,Math.max(2,+$("lottotal").value||25)),
+    maxper:Math.max(0,parseInt($("lotmax").value,10)||0),
+    pay:$("lotpay").value.trim(),
+    rem:$("lotrem").checked,
+    msgs:l.msgs||[]
+  };
+  save();
+}
+function lotLoad(){
+  const l=S.lot;if(!l)return;
+  $("lotprice").value=l.price||"";
+  $("lotprize").value=l.prize||"";
+  $("lotprizewords").value=l.prizeWords||"";
+  $("lotdate").value=l.date||"";
+  $("lottime").value=l.time||"";
+  $("lottotal").value=l.total||25;
+  $("lotmax").value=(l.maxper!=null?l.maxper:0);
+  $("lotpay").value=l.pay||"";
+  $("lotrem").checked=l.rem!==false;
+}
+
+let lotHtml="";
+function renderLot(){
+  const l=S.lot||{};
+  const total=l.total||25;
+  const cs=S.claims||{};
+  const pickedCount=Object.keys(cs).length;
+  $("lotmsg").textContent=((l.msgs&&l.msgs.length)?"📌 ለግሩፑ ተልኳል / posted":"ገና ለግሩፑ አልተላከም / not posted yet")+" · የተያዙ: "+pickedCount+"/"+total+" · የቀሩ: "+Math.max(0,total-pickedCount);
+  const paidNums=[],remNums=[];
+  for(let n=1;n<=total;n++){
+    const c=cs[n];
+    if(!c)remNums.push("#"+n);
+    else if(c.paid)paidNums.push("#"+n);
+  }
+  const ks=Object.keys(cs).map(Number).sort((a,b)=>a-b);
+  const takenAllNums=ks.map(n=>"#"+n);
+  const summarySheet='<div class="xl-wrap" style="max-height:none;margin-bottom:8px"><table class="xl"><thead><tr><th>የዕጣ ሁኔታ</th><th>ብዛት</th><th>ቁጥሮች</th></tr></thead><tbody>'+
+    '<tr class="picked"><td><b>✅ የተያዙ ዕጣዎች</b></td><td><b>'+takenAllNums.length+'</b></td><td><b>'+(takenAllNums.length?esc(takenAllNums.join(", ")):"---")+'</b></td></tr>'+
+    '<tr><td><b>💰 የተከፈለባቸው ዕጣዎች</b></td><td><b>'+paidNums.length+'</b></td><td><b>'+(paidNums.length?esc(paidNums.join(", ")):"---")+'</b></td></tr>'+
+    '<tr><td><b>⬜ የቀሩ ዕጣዎች</b></td><td><b>'+remNums.length+'</b></td><td><b>'+(remNums.length?esc(remNums.join(", ")):"---")+'</b></td></tr>'+
+    '</tbody></table></div>';
+  const rowsHtml=ks.length?ks.map(n=>{
+    const c=cs[n];
+    const stBadge=c.paid
+      ?'<span class="badge b-ok">💰✅ ተረጋግጧል</span>'
+      :'<span class="badge b-wait">✅ ተመርጧል</span>';
+    return '<tr class="picked"><td><b>#'+n+'</b></td><td><b>'+esc(c.n)+'</b>'+(c.tm?' <span class="h" style="margin:0">('+esc(c.tm)+')</span>':'')+'</td><td><b>'+stBadge+'</b></td><td><input class="xl-in" data-nm="'+n+'" value="'+escA(c.rn||"")+'" placeholder="ሙሉ ስም / Full name"'+(S.reg?" disabled":"")+'></td><td><span style="display:flex;gap:5px"><button class="sec" style="padding:4px 8px" data-act="pay" data-n="'+n+'" title="ክፍያ አረጋግጥ">'+(c.paid?"↩️":"💰✓")+'</button><button class="sec" style="padding:4px 8px" data-act="del" data-n="'+n+'" title="ሰርዝ">'+(pendingDelNum===n?"❓ ✖":"✖")+'</button></span></td></tr>';
+  }).join(""):'<tr><td colspan="5" class="h" style="text-align:center;padding:12px"><b>ገና የመረጠ የለም / No picks yet</b></td></tr>';
+  const html=summarySheet+'<div class="xl-wrap" style="max-height:65vh"><table class="xl"><thead><tr><th>ቁጥር</th><th>መራጭ (Telegram)</th><th>ሁኔታ</th><th>ተመዝጋቢ ስም</th><th>እርምጃ</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
+  const box=$("lotclaims"),ae=document.activeElement,typing=!!(ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&box.contains(ae));
+  if(html!==lotHtml&&!typing){box.innerHTML=html;lotHtml=html}
+}
+
+const lotBusy=new Set();
+async function lotPay(n){
+  const c=S.claims&&S.claims[n];if(!c||lotBusy.has(n))return;
+  if(S.reg)return showMsg("ምዝገባ ተቆልፏል፤ መቀየር አይቻልም / The registry is locked");
+  if(!needFor("pay"))return;
+  lotBusy.add(n);
+  const to=!c.paid,txt=(to?"💰 ክፍያ ተረጋግጧል / Payment confirmed":"↩️ ክፍያ ተሰርዟል / Payment reverted")+": #"+n+" "+(c.rn||c.n)+(c.rn?" ("+c.n+")":"");
+  c.paid=to;save();lotHtml="";renderLot();
+  try{
+    if(!await tgx("pay",txt)){c.paid=!to;save();lotHtml="";renderLot();showMsg("ሪፖርቱ አልተላከም፤ ለውጡ ተመልሷል / Report not delivered; change reverted");return}
+    await lotRefreshKb();await editLotSheet();
+  }finally{lotBusy.delete(n)}
+}
+
+let pendingDelNum=0;
+async function lotDel(n){
+  const c=S.claims&&S.claims[n];if(!c||lotBusy.has(n))return;
+  if(S.reg)return showMsg("ምዝገባ ተቆልፏል፤ መቀየር አይቻልም / The registry is locked");
+  if(!needFor("pay"))return;
+  if(pendingDelNum!==n){
+    pendingDelNum=n;lotHtml="";renderLot();
+    setTimeout(()=>{if(pendingDelNum===n){pendingDelNum=0;lotHtml="";renderLot()}},4000);
+    return;
+  }
+  pendingDelNum=0;lotBusy.add(n);
+  const old=S.claims[n];
+  delete S.claims[n];save();lotHtml="";renderLot();
+  try{
+    if(!await tgx("pay","✖ #"+n+" ("+old.n+") በአዘጋጁ ተለቋል / released by the organizer")){S.claims[n]=old;save();lotHtml="";renderLot();showMsg("ሪፖርቱ አልተላከም፤ ለውጡ ተመልሷል / Report not delivered; change reverted");return}
+    await lotRefreshKb();await editLotSheet();
+  }finally{lotBusy.delete(n)}
+}
+
+$("lotclaims").onclick=e=>{
+  const b=e.target&&e.target.closest&&e.target.closest("button[data-act]");
+  if(!b)return;const n=+b.dataset.n;b.dataset.act==="pay"?lotPay(n):lotDel(n);
+};
+$("lotclaims").oninput=e=>{const t=e.target;if(t&&t.dataset&&t.dataset.nm&&S.claims&&S.claims[t.dataset.nm]){S.claims[t.dataset.nm].rn=t.value;save()}};
+$("lotsave").onclick=()=>{lotRead();render();$("lotmsg").textContent="✅ ተቀምጧል / saved"};
+$("lotrefr").onclick=()=>pollConf(true);
+$("lotpost").onclick=async()=>{
+  if(!need())return;
+  lotRead();const l=S.lot;
+  if(!l.price||!l.prize||!l.date||!l.pay){const m="⚠️ ዋጋ፣ ደራሽ፣ ቀንና የክፍያ አማራጭ ይሙሉ / Fill in price, prize, date and payment options";if($("lotmsg"))$("lotmsg").textContent=m;showMsg(m);return}
+  const c=cfg(),parts=Math.ceil(l.total/50);l.msgs=[];
+  for(let k=0;k<parts;k++){
+    const a=k*50+1,b=Math.min(l.total,a+49);
+    const j=await api("sendMessage",{chat_id:c.c,text:k?"🎟 ቁጥሮች / Numbers "+a+"–"+b:lotSheetText(),parse_mode:"HTML",reply_markup:lotKb(a,b)});
+    if(!j){showMsg("ማስታወቂያው ለግሩፑ አልተላከም / Not delivered");return}
+    l.msgs.push({id:j.result.message_id,a,b});save();
+    if(!k)await raw("pinChatMessage",{chat_id:c.c,message_id:j.result.message_id});
+  }
+  render();pollConf();
+};
+$("lotbuild").onclick=()=>{
+  if(S.reg)return showMsg("ምዝገባ ተደርጓል / Already registered");
+  const ks=Object.keys(S.claims||{}).map(Number).filter(n=>S.claims[n].paid).sort((a,b)=>a-b);
+  if(!ks.length)return showMsg("የከፈሉ የሉም / No paid entries");
+  $("names").value=ks.map(n=>{const c=S.claims[n];return (c.rn||String(c.n).replace(/^@/,""))+" (#"+n+")"}).join("\n");
+  $("names").scrollIntoView();
+};
+
+$("paygo").onclick=async()=>{
+  const r=S.hist.length;if(!r)return showMsg("ገና ዕጣ አልወጣም / No draw yet");
+  if(S.pay&&S.pay[r])return showMsg("ለዚህ ዕጣ ክፍያ ተዘግቧል / Payout already reported");
+  if(!needFor("other"))return;
+  const rawAmt=($("payamt")&&$("payamt").value.trim())||String((S.lot&&S.lot.prize)||"");
+  const amt=+rawAmt;
+  if(!amt)return showMsg("የተላከ መጠን (ብር) በ'የተላከ መጠን' ሳጥን ይጻፉ / Enter payout amount first");
+  const ref=($("payref")&&$("payref").value.trim())||"";
+  if(!await tgx("other","💸 ዕጣ #"+r+" ደራሽ ክፍያ ተላከ / Prize paid\n"+S.hist.find(h=>h.r===r).w.join(" | ")+"\n"+fmtN(amt)+" ብር / ETB"+(ref?"\nRef: "+ref:"")))return showMsg("ሪፖርቱ አልተላከም / Report not delivered");
+  S.pay=S.pay||{};S.pay[r]={a:amt,ref,t:new Date().toISOString()};save();
+  if($("payamt"))$("payamt").value="";if($("payref"))$("payref").value="";
+  render();
+};
+
+async function lotRemind(){
+  const l=S.lot;if(!l||!l.rem||!l.date||!(l.msgs||[]).length||!cfgOk())return;
+  const now=new Date(),day=now.toISOString().slice(0,10);
+  if(l.lastRem===day||now.getHours()<8||new Date(l.date+"T"+(l.time||"23:59"))<now)return;
+  l.lastRem=day;save();await tg(lotSheetText("⏰ ማስታወሻ / Reminder\n"));
+}
+setInterval(lotRemind,30*60*1000);setTimeout(lotRemind,5000);
+pollLoop();
+
+let lock=null;
+const clr=()=>{lock=null;$("lockbox").classList.add("hidden");$("pw").value=""};
+$("lockb").onclick=async()=>{
+  if(!needFor("lock"))return;
+  if(!await flush()){showMsg(PEND);return}
+  if(!await verGate())return;
+  if(!await confGate())return;
+  const p=pool(),c=Math.max(1,+$("cnt").value||1);
+  if(p.length<1)return;
+  if(!await tgx("lock",stat())){showMsg("የአባላት ዝርዝርና ሁኔታ ለግሩፑ አልተላከም፤ አልተቆለፈም / The member list and status were not delivered; not locked");return}
+  const b=new Uint8Array(16);crypto.getRandomValues(b);const secret=hex(b);
+  lock={secret,commit:await sha(secret),lh:await sha(p.join("\n")),c};
+  S.locks=(S.locks||0)+1;save();
+  if(!await tgLock()){lock=null;showMsg("ቁልፉ ለግሩፑ አልተላከም / The lock was not delivered to the group");return}
+  $("lc").textContent="ዕጣ #"+(S.hist.length+1)+" ተቆልፏል / locked\nPool: "+p.length+"\nFingerprint: "+lock.lh+"\nWinners: "+c+"\nCommitment: "+lock.commit;
+  $("lockbox").classList.remove("hidden");
+};
+$("lcopy").onclick=()=>cp($("lc").textContent+"\nይፋ ቃል ወይም ቁጥር ላኩ / Send a public word or number.",$("lcopy"));
+$("zoom").onclick=()=>$("wbox").classList.toggle("z");
+$("wheel").onclick=()=>$("wbox").classList.toggle("z");
+
+function spin(names,out,D){
+  const cv=$("wheel"),cx=cv.getContext("2d"),Z=cv.width,R=Z/2-14;
+  let seg=names.slice();$("whint").textContent="";
+  if(seg.length>40){
+    seg=out.slice();const rest=names.filter(n=>!out.includes(n));
+    while(seg.length<40&&rest.length)seg.push(rest.splice(Math.random()*rest.length|0,1)[0]);
+    seg.sort(()=>Math.random()-.5);
+    $("whint").textContent="40 ስሞች ናሙና / sample of 40 names. ትክክለኛው አሸናፊ በማስረጃው ይወሰናል / The proof decides.";
+  }
+  const dr=rot=>{
+    const n=seg.length,a=2*Math.PI/n;cx.clearRect(0,0,Z,Z);
+    for(let i=0;i<n;i++){
+      cx.beginPath();cx.moveTo(Z/2,Z/2);cx.arc(Z/2,Z/2,R,rot+i*a,rot+(i+1)*a);cx.closePath();
+      cx.fillStyle="hsl("+i*360/n+",65%,"+(i%2?45:55)+"%)";cx.fill();cx.strokeStyle="rgba(255,255,255,.6)";cx.lineWidth=2;cx.stroke();
+      cx.save();cx.translate(Z/2,Z/2);cx.rotate(rot+(i+.5)*a);cx.textAlign="right";cx.fillStyle="#fff";
+      cx.font="bold "+Math.max(14,Math.min(30,480/n|0))+"px system-ui,sans-serif";
+      let t=seg[i];if(t.length>14)t=t.slice(0,13)+"…";cx.fillText(t,R-16,8);cx.restore();
+    }
+    cx.beginPath();cx.arc(Z/2,Z/2,26,0,7);cx.fillStyle="#fff";cx.fill();
+    cx.beginPath();cx.moveTo(Z/2-18,2);cx.lineTo(Z/2+18,2);cx.lineTo(Z/2,40);cx.closePath();
+    cx.fillStyle="#ef4444";cx.fill();cx.strokeStyle="#fff";cx.lineWidth=3;cx.stroke();
+  };
+  let rot=0;dr(0);const sh=[];
+  const to=i=>new Promise(res=>{
+    const a=2*Math.PI/seg.length,tg=-Math.PI/2-(i+.5)*a;
+    const d=(((tg-rot)%(2*Math.PI))+2*Math.PI)%(2*Math.PI)+2*Math.PI*(D/2|0),s=rot,t0=performance.now();
+    const f=now=>{const p=Math.min(1,(now-t0)/(D*1000)),e=1-Math.pow(1-p,3);rot=s+d*e;dr(rot);p<1?requestAnimationFrame(f):res()};
+    requestAnimationFrame(f);
+  });
+  const hold=name=>new Promise(res=>{const t0=performance.now();const f=n=>{dr(rot);cx.fillStyle="rgba(0,0,0,.78)";cx.fillRect(0,Z/2-64,Z,128);cx.fillStyle="#fff";cx.textAlign="center";cx.font="bold 46px system-ui,sans-serif";cx.fillText("🏆 "+(name.length>20?name.slice(0,19)+"…":name),Z/2,Z/2+16);n-t0<2000?requestAnimationFrame(f):res()};requestAnimationFrame(f)});
+  return(async()=>{
+    for(let k=0;k<out.length;k++){
+      if(k<5){await to(seg.indexOf(out[k]));await hold(out[k])}
+      sh.push(out[k]);$("win").innerHTML=sh.map(w=>"🏆 "+esc(w)).join("<br>");
+    }
+  })();
+}
+
+const drawRun=async()=>{
+  if(!need())return;
+  if(!await flush()){showMsg(PEND);return}
+  const MT=window.MediaRecorder&&["video/mp4;codecs=avc1","video/mp4"].find(t=>MediaRecorder.isTypeSupported(t));
+  if(!MT){showMsg("ይህ ስልክ የሽክርክሪት ቪዲዮ መቅዳት አይችልም፤ ቪዲዮ መላክ ግዴታ ነው / This phone cannot record the spin video, which is required");return}
+  const p=pool(),c=Math.max(1,+$("cnt").value||1),D=+$("dur").value;
+  if(!lock){showMsg("መጀመሪያ 'ከዕጣ በፊት ቆልፍ'ን ተጫን / Lock the draw first");return}
+  if(S.conf&&Object.keys(S.conf.dis).length){showMsg("ያልተፈታ ክርክር አለ ⚠️ / Unresolved disputes");return}
+  if(!$("pw").value.trim()){showMsg("ይፋ ቃል ወይም ቁጥር ጻፍ / Enter the public word first");$("pw").focus();return}
+  if(p.length<1)return showMsg("ሁሉም አሸንፈዋል / Everyone has won");
+  if(lock.lh!==await sha(p.join("\n"))||lock.c!==c){showMsg("ዝርዝር ወይም ብዛት ተቀይሯል፤ እንደገና ቆልፍ / Changed after locking; lock again");clr();return}
+  const commit=lock.commit,secret=lock.secret,word=$("pw").value.trim(),seed=await sha(secret+"|"+word);
+  const{lh,out}=await pick(p,seed,c),now=new Date().toISOString(),r=S.hist.length+1,a=$("amt").value.trim();
+  $("draw").disabled=true;
+  S.spins=(S.spins||0)+1;const sn=S.spins;save();
+  if(!await tg("🎡 ሽክርክሪት #"+sn+" ተጀመረ / Spin #"+sn+" started\nዕጣ / Round #"+r+(a?" · "+a+" ብር / ETB":"")+"\nPublic word: "+word+"\n§§\nCommitment: "+commit)){$("draw").disabled=false;showMsg("ሽክርክሪቱ መጀመሩ ለግሩፑ አልተላከም፤ ዕጣው አልተጀመረም / The start was not reported to the group; the draw did not start");return}
+  st("① ተጀመረ ለግሩፑ ተልኳል ✓ · ሽክርክሪት… (ይህን ገጽ አትዝጋ) / start reported; spinning (keep this page open)");const pf=["ዕቁቤ ዕጣ #"+r+" / Eqube draw #"+r,"Amount: "+(a||"-")+" ETB","Time: "+now,"Pool: "+p.join(" | "),"Winner(s): "+out.join(" | "),"List fingerprint: "+lh,"Seed: "+seed,"Winners drawn: "+out.length,"Commitment: "+commit,"Secret: "+secret,"Public word: "+word];
+  S.hist.push({r,a,w:out,t:now,sn});S.amt=a;
+  const it={h:"🏆 ዕጣ #"+r+" / Draw #"+r+" · ሽክርክሪት / Spin #"+sn+"\n"+out.join(" | ")+(a?"\n"+a+" ብር / ETB":"")+"\nየቀሩ / Remaining: "+pool().length+"\nPublic word: "+word+"\n✅ ማስረጃውን በዕቁቤ 'ዕጣ አረጋግጥ' አረጋግጠው ከታች ጫኑ / Verify the proof, then tap ✅ below",tl:pf.join("\n"),v:false,r};
+  S.pend=S.pend||[];S.pend.push(it);save();clr();
+  $("pbox").classList.add("hidden");$("win").innerHTML="";
+  $("wbox").classList.remove("hidden");$("wbox").scrollIntoView({behavior:"smooth"});
+  let wl=null;try{wl=await Promise.race([navigator.wakeLock.request("screen"),sleep(1500)])}catch(e){}
+  let rc=null;const ch=[];
+  try{rc=new MediaRecorder($("wheel").captureStream(30),{mimeType:MT,videoBitsPerSecond:1500000});rc.ondataavailable=e=>{if(e.data.size)ch.push(e.data)};rc.start(500)}catch(e){rc=null}
+  try{await spin(p,out,D)}catch(e){st("⚠️ spin: "+(e&&e.message||e))}
+  $("win").innerHTML=out.map(w=>"🏆 "+esc(w)).join("<br>");
+  let blob=null;
+  if(rc){await Promise.race([new Promise(res=>{rc.onstop=res;try{rc.stop()}catch(e){res()}}),sleep(4000)]);blob=new Blob(ch,{type:"video/mp4"})}
+  try{wl&&wl.release()}catch(e){}
+  $("proof").innerHTML=pf.map(l=>l.startsWith("Public word:")?'<span class="pubt">'+esc(l)+"</span>":esc(l)).join("\n");$("pbox").classList.remove("hidden");
+  setTimeout(()=>$("wbox").classList.remove("z"),2500);
+  st("② ቪዲዮ እየተላከ… / sending the spin video");let vok=false;for(let k=0;k<2&&!vok;k++)vok=await tgVideo(blob,"🎡 ዕጣ #"+r+" · ሽክርክሪት #"+sn);
+  if(vok){it.v=true;save()}
+  st(vok?"③ ቪዲዮ ተልኳል ✓ · ውጤት እየተላከ… / video sent; sending result":"③ ❌ ቪዲዮ አልተላከም · ውጤት እየተላከ… / video failed; sending result");
+  const ok=await flush();
+  st(ok?"④ ሁሉም ተልኳል ✓ / everything reported":"④ ❌ ውጤት አልተላከም፤ 'ሪፖርት ላክ' ተጫን / result not delivered; press Send report");
+  $("draw").disabled=false;render();
+};
+
+$("draw").onclick=async()=>{
+  try{await drawRun()}
+  catch(e){st("❌ ስህተት / Error: "+(e&&e.message||e));showMsg("ስህተት / Error: "+(e&&e.message||e));$("draw").disabled=false;try{await flush()}catch(_){}render()}
+};
+$("pcopy").onclick=()=>cp($("proof").textContent,$("pcopy"));
+
+$("vgo").onclick=async()=>{
+  const p=$("vp").value,o=$("vo");
+  const g=k=>{const m=p.match(new RegExp("^"+k+":\\s*(.*)$","mi"));return m?m[1].trim():""};
+  const pl=g("Pool").split("|").map(s=>s.trim()).filter(Boolean),seed=g("Seed"),fp=g("List fingerprint"),cnt=parseInt(g("Winners drawn"))||1,cl=g("Winner\\(s\\)"),cm=g("Commitment"),sc=g("Secret");
+  let wd=g("Public word");if(wd==="(none)")wd="";
+  if(!pl.length||!seed){o.textContent="ማስረጃውን ለጥፍ / Paste the full proof";return}
+  const R=[],ad=(ok,t)=>R.push((ok?"✅ ":"❌ ")+t);
+  ad(await sha(pl.join("\n"))===fp,"ዝርዝሩ ከfingerprint ጋር ይመሳሰላል / Pool matches fingerprint");
+  if(cm&&sc){
+    ad(await sha(sc)===cm,"ሚስጥሩ ከቁልፉ ጋር ይመሳሰላል / Secret matches commitment");
+    ad(await sha(sc+"|"+wd)===seed,"Seed ከሚስጥርና ከይፋ ቃል የተሰራ ነው / Seed = secret + public word");
+  }else R.push("ℹ️ ፈጣን ዕጣ / Quick draw, not locked");
+  const{out}=await pick(pl,seed,cnt);
+  ad(out.join(" | ")===cl,"አሸናፊ(ዎች) ትክክል ነው / Winners match: "+out.join(" | "));
+  o.innerHTML=R.map(esc).join("<br>");
+};
+
+$("vrgo").onclick=async()=>{
+  const t=$("vr").value,L=t.split(/\r?\n/).map(s=>s.trim().match(/^\d+[.)]\s*(.+)$/)).filter(Boolean).map(m=>m[1].trim());
+  const fm=t.match(/^Fingerprint:\s*(\S+)/mi),q=$("q2").value.trim().toLowerCase(),o=$("vro"),R=[];
+  if(!L.length){o.textContent="ቁጥር ያላቸው ስሞች አልተገኙም / No numbered names found. Paste the Copy-list message. የምዝገባ መልእክቱን ለጥፍ / Paste the registry message";return}
+  R.push((!fm?"⚠️ Fingerprint አልተገኘም / No Fingerprint line found":await sha(L.join("\n"))===fm[1]?"✅ ዝርዝሩ ከfingerprint ጋር ይመሳሰላል / List matches fingerprint":"❌ ዝርዝሩ ተቀይሯል / List was changed"));
+  if(q){const m=L.map((n,i)=>[n,i+1]).filter(x=>x[0].toLowerCase().includes(q));R.push(m.length?m.slice(0,5).map(x=>"✅ #"+x[1]+" "+x[0]).join("\n"):"❌ አልተገኘም / Not found")}
+  o.innerHTML=R.map(esc).join("<br>").replace(/\n/g,"<br>");
+};
+
+{const c0=cfg();$("tgt").value=c0.t||"";$("tgc").value=c0.c||"";$("tgon").checked=c0.on!==false;N_KEYS.forEach(k=>{const e=$("n_"+k);if(e)e.checked=(c0.n||{})[k]!==false})}
+$("amt").value=S.amt||"";lotLoad();render();
+["reg","rreset","rgo","sgo","paygo","hpost","cstart","cref","crem","cclr","lockb","lotpost","lotsave","lotrefr","pendgo","vgo","vrgo","tgfind","tgtest","vclr","lotbuild"].forEach(id=>{
+  const b=$(id),f=b&&b.onclick;if(!f)return;
+  b.onclick=async e=>{if(b._b)return;b._b=true;b.classList.add("busy");
+    try{await f.call(b,e)}catch(err){showMsg("ስህተት / Error: "+(err&&err.message||err))}
+    finally{b._b=false;b.classList.remove("busy")}};
+});
+if(S.pend&&S.pend.length&&cfgOk())flush().then(render);
+
+$("dlhtml").onclick=()=>{
+  const docClone=document.documentElement.cloneNode(true);
+  ["lotclaims","cl","hist","confadmin","ss","sb","rj","proof","win"].forEach(id=>{const e=docClone.querySelector("#"+id);if(e)e.innerHTML=""});
+  docClone.querySelectorAll("button.busy").forEach(b=>b.classList.remove("busy"));
+  const liveBar=docClone.querySelector("#livebar");
+  const liveTxt=docClone.querySelector("#livetxt");
+  const uiBar=docClone.querySelector("#uibar");
+  const uiTxt=docClone.querySelector("#uitxt");
+  if(liveBar){liveBar.classList.add("hidden");if(liveTxt)liveTxt.textContent="";}
+  if(uiBar){uiBar.classList.add("hidden");if(uiTxt)uiTxt.textContent="";}
+  const blob=new Blob(["<!DOCTYPE html>\n"+docClone.outerHTML],{type:"text/html;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download="index.html";
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+};
+</script>
+</body>
+</html>
