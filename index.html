@@ -264,6 +264,18 @@ button.busy::after{content:" ⏳"}
 <div class="h" id="tgm"></div>
 <div class="act" style="margin-top:6px"><button class="sec" id="dlhtml">⬇️ HTML ፋይል አውርድ / Download HTML</button></div>
 </section>
+
+<section class="card">
+<h2>7. 💾 ቅጂ / Backup</h2>
+<div class="h">ሁሉም ውሂብ (ምርጫዎች፣ ምዝገባ፣ አሸናፊዎች፣ ዳኞች፣ የቦት token) በዚህ ስልክ ውስጥ ብቻ ነው የሚኖረው። ስልክ ቢጠፋ ለመመለስ በይለፍ ቃል የተመሰጠረ ቅጂ ያስቀምጡ። ይለፍ ቃሉ ከጠፋ ቅጂው አይከፈትም። / All data lives only on this phone. Keep an encrypted backup; without the password it cannot be opened.</div>
+<label>የይለፍ ቃል / Password (ቢያንስ 6 ፊደል/ቁጥር)</label><input type="password" id="bkpw" autocomplete="new-password">
+<div class="act"><button class="sec" id="bkdl">⬇️ ቅጂ አውርድ / Download backup</button><button class="sec" id="bkcp">📋 ቅጂ ቅዳ / Copy backup text</button></div>
+<label style="margin-top:10px">ከቅጂ መልስ / Restore: ፋይል ምረጥ ወይም ጽሑፉን ለጥፍ</label>
+<input type="file" id="bkfile" accept=".json,.txt,text/plain,application/json">
+<textarea id="bktxt" rows="3" placeholder="EQBK1:…" style="width:100%"></textarea>
+<div class="act"><button class="sec" id="bkrs">📥 መልስ / Restore</button></div>
+<div class="h" id="bkmsg"></div>
+</section>
 </main>
 <script>
 const $=id=>document.getElementById(id),enc=new TextEncoder();
@@ -1275,6 +1287,7 @@ const drawRun=async()=>{
   const ok=await flush();
   st(ok?"④ ሁሉም ተልኳል ✓ / everything reported":"④ ❌ ውጤት አልተላከም፤ 'ሪፖርት ላክ' ተጫን / result not delivered; press Send report");
   $("draw").disabled=false;render();
+  showMsg("💾 ዕጣ ተጠናቅቋል፤ በ'7. ቅጂ' ውስጥ አዲስ ቅጂ ማውረድ አትርሳ / Draw finished: remember to save a new backup (section 7)");
 };
 
 $("draw").onclick=async()=>{
@@ -1319,8 +1332,69 @@ $("amt").value=S.amt||"";lotLoad();render();
 });
 if(S.pend&&S.pend.length&&cfgOk())flush().then(render);
 
+const b64=u=>{let t="";u.forEach(c=>t+=String.fromCharCode(c));return btoa(t)};
+const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+async function bkKey(pw,salt){
+  const k=await crypto.subtle.importKey("raw",enc.encode(pw),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:200000,hash:"SHA-256"},k,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function bkMake(pw){
+  const payload=JSON.stringify({v:1,t:new Date().toISOString(),s:S,tg:_getS(TK)||"",});
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},await bkKey(pw,salt),enc.encode(payload)));
+  return "EQBK1:"+b64(salt)+"."+b64(iv)+"."+b64(ct);
+}
+async function bkOpen(text,pw){
+  const m=String(text||"").trim().match(/^EQBK1:([^.]+)\.([^.]+)\.(.+)$/);
+  if(!m)throw new Error("ቅጂው ትክክል አይደለም / Not a valid backup");
+  let pt;
+  try{pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(m[2])},await bkKey(pw,unb64(m[1])),unb64(m[3]))}
+  catch(e){throw new Error("የይለፍ ቃል ትክክል አይደለም / Wrong password")}
+  const o=JSON.parse(new TextDecoder().decode(pt));
+  if(!o||o.v!==1||!o.s||typeof o.s!=="object")throw new Error("ቅጂው የተበላሸ ነው / Corrupted backup");
+  return o;
+}
+const bkm=t=>{$("bkmsg").textContent=t};
+const bkPw=()=>{const p=$("bkpw").value;if(p.length<6){bkm("⚠️ የይለፍ ቃል ቢያንስ 6 ፊደል/ቁጥር / Password: at least 6 characters");return null}return p};
+$("bkdl").onclick=async()=>{
+  const p=bkPw();if(!p)return;
+  try{
+    const t=await bkMake(p),d=new Date().toISOString().slice(0,16).replace(/[:T]/g,"-");
+    const blob=new Blob([t],{type:"text/plain"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="eqube-backup-"+d+".txt";document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    bkm("✅ ቅጂ ተዘጋጅቷል / Backup ready · ፋይሉ ካልወረደ 'ቅጂ ቅዳ'ን ተጠቀም / if no file appears, use Copy");
+  }catch(e){bkm("❌ "+(e&&e.message||e))}
+};
+$("bkcp").onclick=async()=>{
+  const p=bkPw();if(!p)return;
+  try{await cp(await bkMake(p),$("bkcp"));bkm("✅ ተቀድቷል፤ ወደ ቴሌግራም 'Saved Messages' ለጥፍ / Copied; paste it into Telegram Saved Messages")}
+  catch(e){bkm("❌ "+(e&&e.message||e))}
+};
+$("bkfile").onchange=async e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  try{$("bktxt").value=(await f.text()).trim();bkm("ፋይሉ ተነብቧል፤ የይለፍ ቃል ጽፈህ 'መልስ'ን ተጫን / File loaded; enter the password and press Restore")}
+  catch(err){bkm("❌ ፋይሉ አልተነበበም / Could not read the file")}
+};
+let bkSure=false;
+$("bkrs").onclick=async()=>{
+  const p=bkPw();if(!p)return;
+  try{
+    const o=await bkOpen($("bktxt").value,p);
+    if(!bkSure){
+      bkSure=true;setTimeout(()=>{bkSure=false},8000);
+      const reg=o.s.reg?o.s.reg.length+" አባላት":"ምዝገባ የለም",cl=Object.keys(o.s.claims||{}).length;
+      return bkm("❓ ቅጂ ከ "+(o.t||"").slice(0,16).replace("T"," ")+": "+reg+" · "+cl+" ቁጥሮች · "+((o.s.hist||[]).length)+" አሸናፊ ዙሮች። አሁን ያለው ውሂብ ይተካል፤ ለማረጋገጥ እንደገና 'መልስ'ን ተጫን / Current data will be replaced; press Restore again");
+    }
+    bkSure=false;
+    _setS(K,JSON.stringify(o.s));if(o.tg)_setS(TK,o.tg);
+    bkm("✅ ተመልሷል፤ ገጹ እየታደሰ ነው… / Restored; reloading…");
+    setTimeout(()=>location.reload(),800);
+  }catch(e){bkSure=false;bkm("❌ "+(e&&e.message||e))}
+};
 $("dlhtml").onclick=()=>{
   const docClone=document.documentElement.cloneNode(true);
+  ["bkpw","bktxt","tgt"].forEach(id=>{const e=docClone.querySelector("#"+id);if(e){e.removeAttribute("value");if(e.tagName==="TEXTAREA")e.textContent=""}});
   ["lotclaims","cl","hist","confadmin","ss","sb","rj","proof","win"].forEach(id=>{const e=docClone.querySelector("#"+id);if(e)e.innerHTML=""});
   docClone.querySelectorAll("button.busy").forEach(b=>b.classList.remove("busy"));
   const liveBar=docClone.querySelector("#livebar");
