@@ -90,7 +90,7 @@ button.busy::after{content:" ⏳"}
 <body>
 <main>
 <h1>🎲 ዕቁቤ / Eqube</h1>
-<div class="h">ፍትሃዊ ዕጣ ከማረጋገጫ ጋር / Provably fair draw · <b>v10</b></div>
+<div class="h">ፍትሃዊ ዕጣ ከማረጋገጫ ጋር / Provably fair draw · <b>v11</b></div>
 
 <div class="live-toast hidden" id="livebar">
   <span><span class="pulse-dot"></span> <span id="livetxt"></span></span>
@@ -318,22 +318,40 @@ window.fetch=(u,o={})=>{
   return _f(u,{...o,signal:c.signal}).finally(()=>clearTimeout(t));
 };
 const parse=t=>t.split("\n").map(s=>s.trim()).filter(Boolean);
-const K="eqube2";let S={reg:null,fp:"",hist:[],swaps:[],amt:""};
-const _memStore={};
+const K="eqube2",KV=K+"_v",KB=K+"_bk";let S={reg:null,fp:"",hist:[],swaps:[],amt:""};
+const _memStore={};let _memUsed=false,_loadMsg="";
 const _getS=k=>{try{return localStorage.getItem(k)}catch(e){return _memStore[k]||null}};
-const _setS=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){_memStore[k]=v}};
-try{const rawS=_getS(K);if(rawS)S=JSON.parse(rawS)||S}catch(e){}
-if(!S.reg){for(const g of [()=>_getS(K+"_b"),()=>{try{return sessionStorage.getItem(K)}catch(e){return null}}]){try{const o=JSON.parse(g()||"null");if(o&&o.reg){S=o;break}}catch(e){}}}
-let _restoring=true;
-function idbOpen(){return new Promise(res=>{try{const q=indexedDB.open("eqube_bak",1);q.onupgradeneeded=()=>{try{q.result.createObjectStore("s")}catch(e){}};q.onsuccess=()=>res(q.result);q.onerror=()=>res(null);q.onblocked=()=>res(null)}catch(e){res(null)}})}
-async function idbPut(k,v){const d=await idbOpen();if(!d)return;try{d.transaction("s","readwrite").objectStore("s").put(v,k)}catch(e){}}
-async function idbDel(k){const d=await idbOpen();if(!d)return;try{d.transaction("s","readwrite").objectStore("s").delete(k)}catch(e){}}
-async function idbGet(k){const d=await idbOpen();if(!d)return null;return new Promise(res=>{try{const q=d.transaction("s").objectStore("s").get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)}catch(e){res(null)}})}
-// registered list is kept in 4 places so leaving/re-opening the page can never lose it
-const save=()=>{const j=JSON.stringify(S);try{_setS(K,j)}catch(e){}try{_setS(K+"_b",j)}catch(e){}try{sessionStorage.setItem(K,j)}catch(e){}if(!_restoring)idbPut(K,j);try{wKick()}catch(e){}};
-async function lastRegGet(){let a=null;try{a=JSON.parse(_getS("eqube_lastreg")||"null")}catch(e){}if(a&&a.n)return a;try{a=JSON.parse(await idbGet("lastreg")||"null")}catch(e){a=null}return a&&a.n?a:null}
-function lastRegSet(n){const j=JSON.stringify({n});_setS("eqube_lastreg",j);idbPut("lastreg",j)}
-function lastRegClear(){try{localStorage.removeItem("eqube_lastreg")}catch(e){}delete _memStore["eqube_lastreg"];idbDel("lastreg")}
+const _setS=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){_memStore[k]=v;_memUsed=true}};
+try{localStorage.setItem("__t","1");localStorage.removeItem("__t")}catch(e){_loadMsg="⚠️ ይህ ብሮውዘር ውሂብ ማስቀመጥ አይፈቅድም፤ ገጹ ሲዘጋ ምዝገባው ይጠፋል። በመደበኛ Chrome ይክፈቱት። / This browser blocks storage; data is lost when the page closes. Open it in normal Chrome."}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+try{const rawS=_getS(K);if(rawS)S=JSON.parse(rawS)||S}catch(e){_loadMsg=_loadMsg||"⚠️ የተቀመጠው ውሂብ ማንበብ አልተቻለም / Saved data could not be read"}
+// A registration must never silently disappear: restore it from the shadow copy if the main copy lost it
+try{if(!S.reg){const b=_getS(KB);if(b){const o=JSON.parse(b);if(o&&o.reg){S=o;_loadMsg="♻️ ምዝገባው ከተቀመጠ ቅጂ ተመልሷል / Registration restored from the safety copy"}}}}catch(e){}
+let _vSeen=+(_getS(KV)||0)||(+S._v||0);
+function _fromStore(){
+  try{
+    const sv=+(_getS(KV)||0);
+    if(sv>_vSeen){
+      const raw=_getS(K),o=raw&&JSON.parse(raw);
+      if(o&&typeof o==="object"){S=o;_vSeen=sv;return true}
+    }
+  }catch(e){}
+  return false;
+}
+function _refreshAll(){try{lotHtml=""}catch(e){}try{lotLoad()}catch(e){}try{render()}catch(e){}}
+// Another open page/tab saved newer data: take it instead of overwriting it with this page's stale copy
+const save=force=>{
+  try{
+    if(!force&&_fromStore()){_refreshAll();try{showMsg("🔄 ሌላ ክፍት ገጽ አዲስ ለውጥ አስቀምጧል፤ ገጹ ተመሳስሏል / Another open page saved newer data; this page was refreshed")}catch(e){}return}
+    _vSeen=Math.max(+(_getS(KV)||0),_vSeen)+1;S._v=_vSeen;
+    const js=JSON.stringify(S);_setS(K,js);_setS(KV,String(_vSeen));
+    if(S.reg)_setS(KB,js);
+  }catch(e){}
+  try{wKick()}catch(e){}
+};
+window.addEventListener("storage",e=>{if(e.key===KV||e.key===K){if(_fromStore())_refreshAll()}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&_fromStore())_refreshAll()});
+window.addEventListener("focus",()=>{if(_fromStore())_refreshAll()});
 const pool=()=>{const w=new Set(S.hist.flatMap(h=>h.w));return S.reg.filter(n=>!w.has(n))};
 
 // Non-blocking message banner (no alert/confirm/prompt)
@@ -379,7 +397,7 @@ function tgMultiColExcel(title, cells, colsCount){
       const idx = c * rowsCount + r;
       if (idx < cells.length) w = Math.max(w, cells[idx].length);
     }
-    return Math.min(32, w);
+    return Math.min(20, w);
   });
   const fit = (s, w) => {
     const str = String(s || "");
@@ -398,7 +416,6 @@ function tgMultiColExcel(title, cells, colsCount){
   return [title, "<pre>", sep, ...gridRows, sep, "</pre>"].join("\n");
 }
 
-const boldList=(t,cs)=>t+cs.map(c=>"<b>"+esc(c)+"</b>").join("\n");
 function curRoundT(l){return String(l.roundT!=null?l.roundT:(l.round>0?l.round:"")).trim()}
 function roundLabel(l){const t=curRoundT(l);if(!t)return"የዛሬ ዕድል";return /^\d+$/.test(t)?t+"ኛ ዙር የቀን ዕጣ":t}
 const LT={
@@ -510,12 +527,12 @@ function render(){
 let pendingRegConfirm=false;
 $("reg").onclick=async()=>{
   if(!needFor("reg"))return;
-  const n=parse($("names").value);
+  let n=parse($("names").value);
+  if(n.length>1&&n.every(x=>/^\d+[.)]\s*\S/.test(x)))n=n.map(x=>x.replace(/^\d+[.)]\s*/,"").trim());
   if(n.length<2)return showMsg("ቢያንስ 2 ስም / At least 2 names");
   if(n.some(x=>x.includes("|")))return showMsg('"|" አይፈቀድም / not allowed in names');
   const d=n.filter((x,i)=>n.indexOf(x)!==i);
   if(d.length)return showMsg("የተደጋገመ ስም / Duplicate: "+[...new Set(d)].join(", "));
-  {const lr=await lastRegGet();if(lr){const miss=lr.n.filter(x=>!n.includes(x));if(miss.length)return showMsg("⛔ ቀደም ሲል የተመዘገበው ዝርዝር "+lr.n.length+" አባላት ነበር። ዕጣው ሳይመታ አባል መቀነስ አይፈቀድም። የጎደሉ: "+miss.join(", "))}}
   const J=[0,1,2].map(i=>({n:$("jn"+i).value.trim(),c:$("jc"+i).value}));
   if(J.some(x=>!x.n||x.c.length<4))return showMsg("3 ዳኞች ስምና ቢያንስ 4 ፊደል/ቁጥር ያለው ኮድ ያስፈልጋሉ / 3 judges, each with a name and a code of 4+ characters");
   if(new Set(J.map(x=>x.n)).size<3||new Set(J.map(x=>x.c)).size<3)return showMsg("ስሞችና ኮዶች የተለያዩ መሆን አለባቸው / Judge names and codes must all be different");
@@ -526,11 +543,11 @@ $("reg").onclick=async()=>{
   }
   pendingRegConfirm=false;
   const j=[];for(const x of J){const s=hex(crypto.getRandomValues(new Uint8Array(8)));j.push({n:x.n,s,h:await sha(s+"|"+x.c)})}
-  S={reg:n,fp:await sha(n.join("\n")),hist:[],swaps:[],amt:"",j,lot:S.lot,claims:S.claims,pay:{},confReq:S.confReq};save();
-  [0,1,2].forEach(i=>{$("jn"+i).value="";$("jc"+i).value=""});lastRegSet(n);S.pend=(nOn("reg")&&cfgOk())?[{tx:regPost()}]:[];save();render();flush().then(render);
+  S={reg:n,fp:await sha(n.join("\n")),hist:[],swaps:[],amt:"",j,lot:S.lot,claims:S.claims,pay:{},confReq:S.confReq};save(true);
+  [0,1,2].forEach(i=>{$("jn"+i).value="";$("jc"+i).value=""});S.pend=(nOn("reg")&&cfgOk())?[{tx:regPost()}]:[];save();render();flush().then(render);
 };
 
-const wipe=()=>{lastRegClear();S={reg:null,fp:"",hist:[],swaps:[],amt:"",confReq:S.confReq};save();render()};
+const wipe=()=>{S={reg:null,fp:"",hist:[],swaps:[],amt:"",confReq:S.confReq};_setS(KB,"");save(true);render()};
 let rmode="reset";
 let pendingWipeConfirm=false;
 $("rreset").onclick=()=>{
@@ -604,6 +621,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const cfgOk=()=>{const c=cfg();return !!(c.t&&c.c&&c.on!==false)};
 const PEND="ያልተላከ ሪፖርት አለ፤ መጀመሪያ ላክ / A report is still waiting; send it first";
 function need(){if(cfgOk())return true;const m="⚠️ '6. ማሳወቂያ' (Bot token & Group chat ID) መጀመሪያ መሞላት አለበት / Set up section 6 first";if($("lotmsg"))$("lotmsg").textContent=m;showMsg(m);return false}
+let _lastAbort=false;
 async function api(method,body,isForm){
   const c=cfg();
   if(!isForm&&method==="sendMessage"&&c.q&&body&&body.disable_notification==null)body={...body,disable_notification:true};
@@ -615,7 +633,12 @@ async function api(method,body,isForm){
       const w=j.parameters&&j.parameters.retry_after;
       if(w&&k<3){tgmsg("⏳ "+w+"s");await sleep((w+1)*1000);continue}
       tgmsg("❌ "+(j.description||"error"));return null;
-    }catch(e){if(/^send/.test(method)){tgmsg("⚠️ ምላሽ አልመጣም፤ መልእክቱ ደርሶ ሊሆን ይችላል፤ ግሩፑን አረጋግጡ (እንዳይደገም ራሱ አይደግምም) / No reply; it may have been delivered, check the group");return null}tgmsg("❌ ኢንተርኔት / Network error");if(k<3)await sleep(1000)}
+    }catch(e){
+      _lastAbort=!!(e&&e.name==="AbortError")&&/^send/.test(method);
+      tgmsg("❌ ኢንተርኔት / Network error");
+      if(_lastAbort)return null; // the request may already have been delivered: never send it again (no duplicate in the group)
+      if(k<3)await sleep(1000)
+    }
   }
   return null;
 }
@@ -628,13 +651,23 @@ async function tgVideo(b,cap){
     f.append(fld,b,"spin.mp4");
     if(await api(m,f,true))return true;
     tgmsg($("tgm").textContent+" · "+Math.round(b.size/1024)+" KB");
+    if(_lastAbort)return false;
   }
   return false;
 }
 const fmt=t=>{const i=t.indexOf("\n§§\n");return i<0?fmt0(t):fmt0(t.slice(0,i))+"\n<blockquote expandable>"+esc(t.slice(i+4).trim())+"</blockquote>"};
-const tgLock=()=>{const p=pool(),jn=S.j?S.j.map(j=>esc(j.n)).join(" | "):"-";
-  const lines=p.map((n,i)=>"<b>"+String(i+1).padStart(2,"0")+". "+esc(n)+"</b>").join("\n");
-  return tgx("lock","<u><b>የተከበራችሁ ተወዳዳሪዎቻችን</b></u>\n\n🔒 <b>ዕጣው ተቆልፏል፤ ሊመታ ነው።</b>\nየተወዳዳሪዎች ብዛት = <b>"+p.length+" ሰዎች</b>\nያረጋገጡት ዳኞች: <b>"+jn+"</b>\n\nየተወዳዳሪዎች ስም በቅደም ተከተል:\n"+lines+"\n\n<u><b>ይፋ ቃል ወይም ቁጥር ላኩ።</b></u>\n\n<b>መልካም ዕድል!</b>\n§§\nFingerprint: "+lock.lh+"\nCommitment: "+lock.commit)};
+const tgLock=()=>{
+  const p=pool(),jn=(S.j&&S.j.length)?esc(S.j.map(j=>j.n).join(" | ")):"";
+  const list=boldBlock(p.map((n,i)=>String(i+1).padStart(2,"0")+". "+n));
+  return tgx("lock",
+    "<b><u>የተከበራችሁ ተወዳዳሪዎቻችን</u></b>\n\n"+
+    "<b>🔒 ዕጣው ተቆልፏል፤ ሊመታ ነው።</b>\n\n"+
+    "<b>👥 የተወዳዳሪዎች ብዛት = "+p.length+" ሰዎች</b>"+
+    (lock.c>1?"\n<b>🏆 የሚወጡ አሸናፊዎች = "+lock.c+"</b>":"")+
+    (jn?"\n<b>⚖️ ያረጋገጡት ዳኞች: "+jn+"</b>":"")+
+    "\n\n<b>📋 የተወዳዳሪዎች ስም በቅደም ተከተል:</b>\n"+list+
+    "\n\n<b>✍️ ይፋ ቃል ወይም ቁጥር ላኩ።</b>\n\n<b>🍀 መልካም ዕድል!</b>\n§§\nFingerprint: "+lock.lh+"\nCommitment: "+lock.commit);
+};
 let LASTMID=0,LASTIDS=[];
 let bumpBusy=false;
 async function delOne(id){
@@ -671,9 +704,10 @@ async function tg(text,manual,kb){
   const now=Date.now();
   const key=String(c.c)+"|"+(kb?JSON.stringify(kb)+"|":"")+String(text).trim();
   const prev=_tgRecent.get(key);
-  if(prev && (now-prev)<(manual?5000:60000)){
-    const rem=Math.ceil((5000-(now-prev))/1000);
-    tgmsg("⏳ ተመሳሳይ መልእክት በ5 ሰከንድ ውስጥ ስለታዘዘ አልተደገመም ("+rem+"s)");
+  const WIN=manual?5000:60000;
+  if(prev && (now-prev)<WIN){
+    const rem=Math.ceil((WIN-(now-prev))/1000);
+    tgmsg("⏳ ተመሳሳይ መልእክት ቀድሞ ስለተላከ አልተደገመም ("+rem+"s)");
     return true;
   }
   _tgRecent.set(key,now);
@@ -715,9 +749,10 @@ $("tgfind").onclick=async()=>{
     const c=g[g.length-1];$("tgc").value=c.id;tgmsg("✅ "+(c.title||"")+" ("+c.id+") · አስቀምጥ ተጫን / press Save");
   }catch(e){tgmsg("❌ ኢንተርኔት / Network error")}
 };
-const regExcel=()=>boldList("<b>📋 የተመዘገቡ አባላት ("+S.reg.length+")</b>\n\n",S.reg.map((n,i)=>String(i+1).padStart(2,"0")+". "+n));
-const regPost=()=>"<b>📋 ዕቁቤ ምዝገባ</b>\nአባላት: "+S.reg.length+(S.j?"\nዳኞች: "+esc(S.j.map(j=>j.n).join(" | ")):"")+"\n"+regExcel()+"\n§§\nFingerprint: "+S.fp;
-const stat=()=>{const w=new Map();S.hist.forEach(h=>h.w.forEach(n=>w.set(n,h.r)));const cells=S.reg.map((n,i)=>String(i+1).padStart(2,"0")+". "+(w.has(n)?"🏆#"+w.get(n)+" ":"")+n);return "<b>📋 የዕቁቤ ሁኔታ</b>\nአሸናፊዎች: "+S.hist.length+" · የቀሩ: "+pool().length+"\n\n"+boldList("",cells)};
+const boldBlock=lines=>lines.length<=60?"<b>"+esc(lines.join("\n"))+"</b>":lines.map(l=>"<b>"+esc(l)+"</b>").join("\n");
+const regExcel=()=>"<b>📋 የተመዘገቡ አባላት ("+S.reg.length+")</b>\n"+boldBlock(S.reg.map((n,i)=>String(i+1).padStart(2,"0")+". "+n));
+const regPost=()=>"<b>📋 ዕቁቤ ምዝገባ</b>\n<b>👥 አባላት: "+S.reg.length+"</b>"+(S.j?"\n<b>⚖️ ዳኞች: "+esc(S.j.map(j=>j.n).join(" | "))+"</b>":"")+"\n\n"+regExcel()+"\n§§\nFingerprint: "+S.fp;
+const stat=()=>{const w=new Map();S.hist.forEach(h=>h.w.forEach(n=>w.set(n,h.r)));const lines=S.reg.map((n,i)=>String(i+1).padStart(2,"0")+". "+(w.has(n)?"🏆#"+w.get(n)+" ":"")+n);return "<b>📋 የዕቁቤ ሁኔታ</b>\n<b>አሸናፊዎች: "+S.hist.length+" · የቀሩ: "+pool().length+"</b>\n\n"+boldBlock(lines)};
 $("hpost").onclick=async()=>{if(!await tg(stat(),true))cp(stat(),$("hpost"))};
 const ledger=()=>{
   const n=parseInt(($("ledn")||{}).value,10)||0;
@@ -739,12 +774,12 @@ function confKb(){
 }
 function confText(){
   const cf=S.conf,w=wonSet();
-  const cells=S.reg.map((n,i)=>{
-    const stIcon=w.has(n)?"🏆":cf.dis[i]?"⚠️":cf.items[i]?"✅":"⬜";
-    return String(i+1).padStart(2,"0")+". "+stIcon+" "+n;
+  const lines=S.reg.map((n,i)=>{
+    const ic=w.has(n)?"🏆":cf.dis[i]?"⚠️":cf.items[i]?"✅":"⬜";
+    return String(i+1).padStart(2,"0")+" "+ic+" "+n;
   });
   const need=S.reg.filter(n=>!w.has(n)).length,ok=S.reg.filter((n,i)=>!w.has(n)&&cf.items[i]&&!cf.dis[i]).length;
-  return "<b>📝 ስም ማረጋገጫ</b>\nእያንዳንዱ አባል የራሱን ቁጥር ከታች ይጫን ("+ok+"/"+need+" ✅)\n\n"+boldList("",cells);
+  return "<b>📝 ስም ማረጋገጫ</b>\n<b>እያንዳንዱ አባል የራሱን ቁጥር ከታች ይጫን ("+ok+"/"+need+" ✅)</b>\n\n<b>"+esc(lines.join("\n"))+"</b>";
 }
 
 // #1 & #2: Organizer confirmation display + ON/OFF requirement toggle
@@ -824,7 +859,7 @@ const memberOf=uid=>{
   const i=[...idx][0],m=S.reg[i].match(/^(.*) \(#(\d+)\)$/);return m?"#"+m[2]+" "+m[1]:"#"+(i+1)+" "+S.reg[i];
 };
 const rosterText=v=>{if(!v)return"";const l=o=>Object.values(o).map(x=>x.n+(x.m?" ("+x.m+")":"")).join(", ");const a=Object.keys(v.ok).length,b=Object.keys(v.no).length;return(a?"\n✅ አረጋግጠዋል ("+a+"): "+l(v.ok):"")+(b?"\n❌ ተቃውመዋል ("+b+"): "+l(v.no):"")};
-const rosterNew=v=>{const l=o=>{const a=Object.values(o||{});return a.length?a.length+" — "+a.map(x=>x.n+(x.m?" ("+x.m+")":"")).join(", "):"-"};return"ያረጋገጡ ሰዎች ፦ "+l(v&&v.ok)+"\nየተቃወሙ ሰዎች ፦ "+l(v&&v.no)};
+const rosterNew=v=>{const a=Object.values((v&&v.ok)||{}),b=Object.values((v&&v.no)||{});if(!a.length&&!b.length)return"";const l=o=>o.map(x=>esc(x.n+(x.m?" ("+x.m+")":""))).join(", ");return(a.length?"✅ ያረጋገጡ ("+a.length+"): "+l(a):"")+(b.length?(a.length?"\n":"")+"❌ የተቃወሙ ("+b.length+"): "+l(b):"")};
 const verHead=(h,v)=>h.includes("{R}")?h.replace("{R}",rosterNew(v)):h+rosterText(v);
 async function editVer(r){
   const c=cfg(),v=S.ver&&S.ver[r];if(!v)return;
@@ -920,10 +955,10 @@ async function doPoll(t){
         else{cf.dis[i]=true;ans="⚠️ ይህ ቁጥር በሌላ ሰው ተረጋግጧል፤ ለአዘጋጁ ንገሩ";alertIt=true;ch=true}
         ansQ(c,q,ans,alertIt);
       }
-      save();
+      if(j.result&&j.result.length)save();
       if(ch)await editConf();
       for(const r of vr)await editVer(r);
-    }else res=false;
+    }else{res=false;try{wHook409(j)}catch(e){}}
   }catch(e){res=!!(e&&e.name==="AbortError")}
   clearTimeout(tmo);ctl=null;if(touched){renderConf();render()}
   return res;
@@ -934,16 +969,19 @@ async function doPoll(t){
 let wLast={},wVer="",wBusy=false,wAgain=false,wMute=false,wTimer=null,wCfgSent="";
 const wOn=()=>{const c=cfg();return !!(c.wm&&c.wu&&c.wk)};
 const wmsg=t=>{const e=$("wmsg");if(e)e.textContent=t};
+let wLat=0;
 async function wcall(path,body){
-  const c=cfg(),lp=/^\/poll\?ver=.+/.test(path);let le;
-  for(let k=0;k<(lp?1:2);k++){
-    const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),lp?25000:12000);
+  const c=cfg();let last;
+  for(let k=0;k<3;k++){
+    const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),20000),t0=Date.now();
     try{
       const r=await fetch(c.wu.replace(/\/+$/,"")+path,{method:body?"POST":"GET",headers:{"X-Key":c.wk,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined,signal:ac.signal});
-      return await r.json();
-    }catch(e){le=e;await sleep(400)}finally{clearTimeout(tm)}
+      if(r.status>=500&&k<2){last=new Error("HTTP "+r.status);await sleep(400*(k+1));continue}
+      const j=await r.json();wLat=Date.now()-t0;return j;
+    }catch(e){last=e;if(k<2)await sleep(400*(k+1))}
+    finally{clearTimeout(tm)}
   }
-  throw le;
+  throw last;
 }
 function wCfg(){
   const c=cfg(),l=S.lot||{};
@@ -974,7 +1012,6 @@ function wApply(sv,sent){
       }else v=cur[n];
     }else v=sv[n];
     if(v!==undefined&&cur[n]&&cur[n].rm&&!v.rm)v=Object.assign({},v,{rm:cur[n].rm});
-    if(S.reg&&v===undefined&&cur[n]&&cur[n].paid)v=cur[n];
     if(v!==undefined)next[n]=v;
     if((v===undefined)!==(cur[n]===undefined)||(v!==undefined&&wj(v)!==L))ch=true;
   }
@@ -1013,8 +1050,7 @@ async function wPoll(){
       if(!j0||!j0.ok){return null}
       wVer=j0.ver;
       if(j0.claims){
-        const oldC=S.claims||{};S.claims=JSON.parse(JSON.stringify(j0.claims));
-        if(S.reg)for(const k in oldC)if(oldC[k].paid&&!S.claims[k])S.claims[k]=oldC[k];
+        S.claims=JSON.parse(JSON.stringify(j0.claims));
         wLast={};for(const k in j0.claims)wLast[k]=wj(j0.claims[k]);
         wMute=true;try{save()}finally{wMute=false}
         try{lotHtml="";renderLot()}catch(e){}
@@ -1026,10 +1062,16 @@ async function wPoll(){
     const j=await wcall("/poll?ver="+encodeURIComponent(wVer));
     if(!j||!j.ok){wmsg("❌ Worker: "+((j&&j.error)||"?"));return null}
     wVer=j.ver;if(j.claims)wApply(j.claims);
+    wmsg("🌐 ✅ Worker · "+wLat+" ms · "+new Date().toLocaleTimeString());
     return j.result||[];
   }catch(e){return null}
 }
 const wSetCfg=o=>_setS(TK,JSON.stringify({...cfg(),...o}));
+function wHook409(j){
+  if(!j||j.error_code!==409||!/webhook/i.test(j.description||""))return;
+  const cc=cfg();
+  if(cc.wu&&cc.wk){wSetCfg({wm:true});wPulled=false;showMsg("🌐 Telegram webhook ንቁ ነበር፤ ሁልጊዜ ክፍት ሁነታ በራስ ተመልሷል / A webhook is active; always-on mode was switched back on")}
+  else showMsg("⚠️ Telegram webhook ንቁ ነው፤ ስለዚህ የቁጥር ጠቅታዎች ወደዚህ ገጽ አይደርሱም። በ'ሁልጊዜ ክፍት ሁነታ' ውስጥ URL እና Key ሞልተው 'አብራ' ይጫኑ / A webhook is active so clicks do not reach this page: fill in Worker URL and key and press Turn on")}
 $("won").onclick=async()=>{
   tgSave();
   const u=$("wurl").value.trim().replace(/\/+$/,""),k=$("wkey").value.trim(),c0=cfg();
@@ -1098,7 +1140,7 @@ async function pollLoop(){
     try{
       if((S.conf||S.ver||(S.lot&&(S.lot.msgs||[]).length))&&cfgOk()&&!document.hidden){
         const ok=await pollRun(12);
-        if(ok===false){fails++;w=Math.min(20000,fails*3000)}else{fails=0;w=wOn()?5000:250}
+        if(ok===false){fails++;w=wOn()?Math.min(6000,fails*1500):Math.min(20000,fails*3000)}else{fails=0;w=wOn()?3000:250}
       }
     }catch(e){}
     await sleep(w);
@@ -1621,12 +1663,13 @@ const drawRun=async()=>{
   const{lh,out}=await pick(p,seed,c),now=new Date().toISOString(),r=S.hist.length+1,a=$("amt").value.trim();
   $("draw").disabled=true;
   S.spins=(S.spins||0)+1;const sn=S.spins;save();
-  if(!await tg("🎡 <b>ዕጣው እየተመታ ነው፤ ሲስተሙ በማሽከርከር ላይ ነው።</b>\n§§\nዕጣ #"+r+(a?" · "+a+" ብር":"")+"\nይፋ ቃል: "+word+"\nCommitment: "+commit)){$("draw").disabled=false;showMsg("ሽክርክሪቱ መጀመሩ ለግሩፑ አልተላከም፤ ዕጣው አልተጀመረም / The start was not reported to the group; the draw did not start");return}
+  if(!await tg("<b>🎡 ዕጣው እየተመታ ነው፤ ሲስተሙ በማሽከርከር ላይ ነው።</b>")){$("draw").disabled=false;showMsg("ሽክርክሪቱ መጀመሩ ለግሩፑ አልተላከም፤ ዕጣው አልተጀመረም / The start was not reported to the group; the draw did not start");return}
   st("① ተጀመረ ለግሩፑ ተልኳል ✓ · ሽክርክሪት… (ይህን ገጽ አትዝጋ) / start reported; spinning (keep this page open)");const pf=["ዕቁቤ ዕጣ #"+r,"የገንዘብ መጠን: "+(a?a+" ብር":"-"),"ሰዓት: "+now,"ተወዳዳሪዎች: "+p.join(" | "),"አሸናፊ(ዎች): "+out.join(" | "),"የዝርዝር ፊርማ: "+lh,"ዘር: "+seed,"የአሸናፊዎች ብዛት: "+out.length,"ቁልፍ: "+commit,"ሚስጥር: "+secret,"ይፋ ቃል: "+word];
   S.hist.push({r,a,w:out,t:now,sn});S.amt=a;
   if(S.lot){const rt=curRoundT(S.lot);if(/\d/.test(rt)){S.lot.roundT=rt.replace(/\d+/,m=>String(+m+1));if($("lotround"))$("lotround").value=S.lot.roundT}}
   const wn=out.map(w=>{const m=String(w).match(/^(.*?)\s*\(#(\d+)\)$/);return m?{n:m[1],k:m[2]}:{n:String(w),k:"-"}});
-  const it={h:"🏆 <b>"+wn.map(x=>esc(x.n)).join(", ")+" የ"+(a?fmtN(a)+" ብር":"-")+" አሸናፊ ሆኗል!</b>\nየዕጣ ቁጥር: "+wn.map(x=>x.k).join(", ")+"\n{R}",tl:pf.join("\n"),v:false,r};
+  const who=out.map(w=>esc(String(w))).join("፣ ");
+  const it={h:"🏆 <b>"+who+"</b>"+(a?" የ<b>"+esc(fmtN(a))+" ብር</b>":"")+(out.length>1?" አሸናፊዎች ሆነዋል! 🎉":" አሸናፊ ሆኗል! 🎉")+"\n\n{R}",tl:pf.join("\n"),v:false,r};
   S.pend=S.pend||[];S.pend.push(it);save();clr();
   $("pbox").classList.add("hidden");$("win").innerHTML="";
   $("wbox").classList.remove("hidden");$("wbox").scrollIntoView({behavior:"smooth"});
@@ -1644,10 +1687,10 @@ const drawRun=async()=>{
   try{wl&&wl.release()}catch(e){}
   $("proof").innerHTML=pf.map(l=>l.startsWith("ይፋ ቃል:")?'<span class="pubt">'+esc(l)+"</span>":esc(l)).join("\n");$("pbox").classList.remove("hidden");
   setTimeout(()=>$("wbox").classList.remove("z"),2500);
-  st("② ቪዲዮ እየተላከ… / sending the spin video");let vok=false;for(let k=0;k<2&&!vok;k++)vok=await tgVideo(blob,"🎡 ዕጣ #"+r+" · ሽክርክሪት #"+sn);
+  st("② ቪዲዮ እየተላከ… / sending the spin video");let vok=false;for(let k=0;k<2&&!vok&&!_lastAbort;k++)vok=await tgVideo(blob,"🎡 ዕጣ #"+r+" · ሽክርክሪት #"+sn);
   if(vok){it.v=true;save()}
   st(vok?"③ ቪዲዮ ተልኳል ✓ · ውጤት እየተላከ… / video sent; sending result":"③ ❌ ቪዲዮ አልተላከም · ውጤት እየተላከ… / video failed; sending result");
-  const ok=await flush();if(ok)lastRegClear();
+  const ok=await flush();
   st(ok?"④ ሁሉም ተልኳል ✓ / everything reported":"④ ❌ ውጤት አልተላከም፤ 'ሪፖርት ላክ' ተጫን / result not delivered; press Send report");
   $("draw").disabled=false;render();
   showMsg("💾 ዕጣ ተጠናቅቋል፤ በ'7. ቅጂ' ውስጥ አዲስ ቅጂ ማውረድ አትርሳ / Draw finished: remember to save a new backup (section 7)");
@@ -1686,7 +1729,7 @@ $("vrgo").onclick=async()=>{
 };
 
 {const c0=cfg();$("tgt").value=c0.t||"";$("tgc").value=c0.c||"";$("tgon").checked=c0.on!==false;$("tgq").checked=!!c0.q;N_KEYS.forEach(k=>{const e=$("n_"+k);if(e)e.checked=(c0.n||{})[k]!==false});$("wurl").value=c0.wu||"";$("wkey").value=c0.wk||"";if(c0.wm)$("wmsg").textContent="🌐 ሁልጊዜ ክፍት ሁነታ በርቷል / Always-on mode is ON"}
-$("amt").value=S.amt||"";lotLoad();render();
+$("amt").value=S.amt||"";lotLoad();render();if(_loadMsg)showMsg(_loadMsg);
 ["reg","rreset","rgo","sgo","paygo","hpost","hledger","cstart","cref","crem","cclr","lockb","lotpost","lotsave","lotrefr","lotbump","pendgo","vgo","vrgo","tgfind","tgtest","vclr","lotbuild","orgassign","relunpaid","remindgo"].forEach(id=>{
   const b=$(id),f=b&&b.onclick;if(!f)return;
   b.onclick=async e=>{if(b._b)return;b._b=true;b.classList.add("busy");
@@ -1750,7 +1793,7 @@ $("bkrs").onclick=async()=>{
       return bkm("❓ ቅጂ ከ "+(o.t||"").slice(0,16).replace("T"," ")+": "+reg+" · "+cl+" ቁጥሮች · "+((o.s.hist||[]).length)+" አሸናፊ ዙሮች። አሁን ያለው ውሂብ ይተካል፤ ለማረጋገጥ እንደገና 'መልስ'ን ተጫን / Current data will be replaced; press Restore again");
     }
     bkSure=false;
-    _setS(K,JSON.stringify(o.s));if(o.tg)_setS(TK,o.tg);
+    _setS(K,JSON.stringify(o.s));_setS(KB,o.s.reg?JSON.stringify(o.s):"");if(o.tg)_setS(TK,o.tg);
     bkm("✅ ተመልሷል፤ ገጹ እየታደሰ ነው… / Restored; reloading…");
     setTimeout(()=>location.reload(),800);
   }catch(e){bkSure=false;bkm("❌ "+(e&&e.message||e))}
@@ -1773,7 +1816,6 @@ $("dlhtml").onclick=()=>{
   document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1500);
 };
-(async()=>{try{if(!S.reg){const raw=await idbGet(K);const o=JSON.parse(raw||"null");if(o&&o.reg){S=o;_setS(K,raw);render();showMsg("✅ ምዝገባው ከመጠባበቂያ ተመልሷል / Registration restored from backup")}}}catch(e){}_restoring=false;try{idbPut(K,JSON.stringify(S))}catch(e){}})();
 </script>
 </body>
 </html>
